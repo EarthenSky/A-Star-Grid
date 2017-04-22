@@ -16,3 +16,6 @@ M:\Programming 11\RandomStuff\AStarCiv\AStarCiv\bin\Debug\AStarCiv.xml
 M:\Programming 11\RandomStuff\AStarCiv\AStarCiv\obj\x86\Debug\AStarCiv.Form1.resources
 M:\Programming 11\RandomStuff\AStarCiv\AStarCiv\obj\x86\Debug\AStarCiv.Resources.resources
 M:\Programming 11\RandomStuff\AStarCiv\AStarCiv\obj\x86\Debug\AStarCiv.vbproj.GenerateResource.Cache
+C:\Users\gabeg\Documents\GitHub\AStarCiv\AStarCiv\obj\x86\Debug\AStarCiv.exe
+C:\Users\gabeg\Documents\GitHub\AStarCiv\AStarCiv\obj\x86\Debug\AStarCiv.xml
+C:\Users\gabeg\Documents\GitHub\AStarCiv\AStarCiv\obj\x86\Debug\AStarCiv.pdb
