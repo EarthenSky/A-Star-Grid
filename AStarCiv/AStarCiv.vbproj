@@ -121,6 +121,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="EndPointTile.png" />
     <Content Include="GrassLandTile.png" />
     <Content Include="HillsTile.png" />
     <Content Include="MountainTile.png" />
