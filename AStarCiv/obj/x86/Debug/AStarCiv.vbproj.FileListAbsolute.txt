@@ -26,3 +26,4 @@ C:\Users\gabeg\Documents\GitHub\AStarCiv\AStarCiv\obj\x86\Debug\AStarCiv.vbprojR
 C:\Users\gabeg\Documents\GitHub\AStarCiv\AStarCiv\obj\x86\Debug\AStarCiv.Form1.resources
 C:\Users\gabeg\Documents\GitHub\AStarCiv\AStarCiv\obj\x86\Debug\AStarCiv.Resources.resources
 C:\Users\gabeg\Documents\GitHub\AStarCiv\AStarCiv\obj\x86\Debug\AStarCiv.vbproj.GenerateResource.Cache
+M:\Programming 11\RandomStuff\AStarCiv\AStarCiv\obj\x86\Debug\AStarCiv.vbprojResolveAssemblyReference.cache

@@ -47,27 +47,29 @@ Public Class Form1
     Public Sub StartPathFinding(ByVal sender As Object, ByVal e As KeyEventArgs) Handles Me.KeyDown
         If e.KeyCode = Keys.Space Then
             If blnIsPathFindingDone = False Then  'Finding path
-                Debug.Print(player.GetPositionInGrid().ToString)
+                Debug.Print(FindLowestFCost() & " = F")
+                Debug.Print(FindH(player.GetPositionInGrid()) & " = H")
 
-                'Add current tile to list
-                pntMain = player.GetPositionInGrid()
-                lstOpen.Add(player.GetPositionInGrid())
+                pntMain = player.GetPositionInGrid()  'Make middle tile the maintile.
+                AddToOpen(mdaTiles(player.GetPositionInGrid().X, player.GetPositionInGrid().Y))  'Add current tile to open list
+                AddToClosedFromOpen(mdaTiles(player.GetPositionInGrid().X, player.GetPositionInGrid().Y))  'Add middle tile to closed
 
                 AddAdjacentTilesToOpen(player.GetPositionInGrid())
 
-            Else  'Moving each turn
+            Else  'Moving each turn (nope)
 
             End If
         End If
     End Sub
 
-    Public Sub AddToOpen(ByRef MainTile As Tile)  'Use this to add items to the OpenList
+    Public Sub AddToOpen(ByRef MainTile As Tile)  'Use this to add items to the OpenList (Maybe ByVal)
         MainTile.SetIsInOpenList(True)
         lstOpen.Add(MainTile.GetPositionInGrid)
     End Sub
 
     Public Sub AddToClosedFromOpen(ByRef MainTile As Tile)  'Use this to add items to the ClosedList
         MainTile.SetIsInOpenList(False)
+        MainTile.SetIsInClosedList(True)
         lstOpen.Remove(MainTile.GetPositionInGrid)
         lstClosed.Add(MainTile.GetPositionInGrid)
     End Sub
@@ -75,53 +77,94 @@ Public Class Form1
     'Works
     Public Sub AddAdjacentTilesToOpen(ByVal pntMainPoint As Point)  'Adds the 8 blocks adjacent to the main point if they are able to be added.
         If pntMainPoint.Y > 0 Then  'Makes sure that it doesn't look for a non-existant block ABOVE it.
-            If mdaTiles(pntMainPoint.X, pntMainPoint.Y - 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X, pntMainPoint.Y - 1).IsInOpenList = False Then  'Adds the block if it is walkable and has not already been added
+            If mdaTiles(pntMainPoint.X, pntMainPoint.Y - 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X, pntMainPoint.Y - 1).IsInOpenList = False And mdaTiles(pntMainPoint.X, pntMainPoint.Y - 1).IsInClosedList = False Then  'Adds the block if it is walkable and has not already been added
                 AddToOpen(mdaTiles(pntMainPoint.X, pntMainPoint.Y - 1))
             End If
             If pntMainPoint.X > 0 Then  'Makes sure that it doesn't look for a non-existant block to the LEFT of it.
-                If mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y - 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y - 1).IsInOpenList = False Then   'Adds the block if it is walkable and has not already been added
+                If mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y - 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y - 1).IsInOpenList = False And mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y - 1).IsInClosedList = False Then   'Adds the block if it is walkable and has not already been added
                     AddToOpen(mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y - 1))
                 End If
             End If
             If pntMainPoint.X < 7 Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
-                If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y - 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y - 1).IsInOpenList = False Then   'Adds the block if it is walkable and has not already been added
+                If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y - 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y - 1).IsInOpenList = False And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y - 1).IsInClosedList = False Then   'Adds the block if it is walkable and has not already been added
                     AddToOpen(mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y - 1))
                 End If
             End If
         End If
 
         If pntMainPoint.X > 0 Then  'Makes sure that it doesn't look for a non-existant block to the LEFT of it.
-            If mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y).IsInOpenList = False Then   'Adds the block if it is walkable and has not already been added
+            If mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y).IsInOpenList = False And mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y).IsInClosedList = False Then   'Adds the block if it is walkable and has not already been added
                 AddToOpen(mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y))
             End If
         End If
 
         If pntMainPoint.X < 7 Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
-            If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y).IsInOpenList = False Then   'Adds the block if it is walkable and has not already been added
+            If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y).IsInOpenList = False And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y).IsInClosedList = False Then   'Adds the block if it is walkable and has not already been added
                 AddToOpen(mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y))
             End If
         End If
 
         If pntMainPoint.Y < 7 Then  'Makes sure that it doesn't look for a non-existant block BELLOW it.
-            If mdaTiles(pntMainPoint.X, pntMainPoint.Y + 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X, pntMainPoint.Y + 1).IsInOpenList = False Then  'Adds the block if it is walkable and has not already been added
+            If mdaTiles(pntMainPoint.X, pntMainPoint.Y + 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X, pntMainPoint.Y + 1).IsInOpenList = False And mdaTiles(pntMainPoint.X, pntMainPoint.Y + 1).IsInClosedList = False Then  'Adds the block if it is walkable and has not already been added
                 AddToOpen(mdaTiles(pntMainPoint.X, pntMainPoint.Y + 1))
             End If
             If pntMainPoint.X > 0 Then  'Makes sure that it doesn't look for a non-existant block to the LEFT of it.
-                If mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y + 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y + 1).IsInOpenList = False Then   'Adds the block if it is walkable and has not already been added
+                If mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y + 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y + 1).IsInOpenList = False And mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y + 1).IsInClosedList = False Then   'Adds the block if it is walkable and has not already been added
                     AddToOpen(mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y + 1))
                 End If
             End If
             If pntMainPoint.X < 7 Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
-                If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y + 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y + 1).IsInOpenList = False Then   'Adds the block if it is walkable and has not already been added
+                If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y + 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y + 1).IsInOpenList = False And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y + 1).IsInClosedList = False Then   'Adds the block if it is walkable and has not already been added
                     AddToOpen(mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y + 1))
                 End If
             End If
         End If
     End Sub
 
-    Public Sub FindLowestFCost()  'also adds f-cost to current tile.
+    Public Function FindLowestFCost() As Short 'also adds f-cost to current tile.
+        Dim shtMainF As Short = 32000
+        Dim pntValue As Point
 
-    End Sub
+        For Each pntOpen In lstOpen
+            Dim shtTempF As Short = 0
+
+            Dim blnCutOffFirstValue As Boolean = False
+            For Each pntClosed In lstClosed  'Calculates the G cost of the tiles before it (In closed list)
+                If blnCutOffFirstValue = False Then
+                    blnCutOffFirstValue = True
+                    Continue For
+                End If
+                If mdaTiles(pntClosed.X, pntClosed.Y).GetTileType = TileType.Normal Then
+                    shtTempF += 10
+                ElseIf mdaTiles(pntClosed.X, pntClosed.Y).GetTileType = TileType.Hindering Then
+                    shtTempF += 20
+                ElseIf mdaTiles(pntClosed.X, pntClosed.Y).GetTileType = TileType.Dangerous Then
+                    shtTempF += 40
+                End If
+            Next
+
+            'Calculates the G cost of the current open tile.
+            If mdaTiles(pntOpen.X, pntOpen.Y).GetTileType = TileType.Normal Then
+                shtTempF += 10
+            ElseIf mdaTiles(pntOpen.X, pntOpen.Y).GetTileType = TileType.Hindering Then
+                shtTempF += 20
+            ElseIf mdaTiles(pntOpen.X, pntOpen.Y).GetTileType = TileType.Dangerous Then
+                shtTempF += 40
+            End If
+
+            shtTempF += FindH(pntOpen)
+
+            If shtTempF <= shtMainF Then 'If the current open tile's f is the smallest make it the main F
+                shtMainF = shtTempF
+                pntValue = pntOpen
+            End If
+        Next
+        Return shtMainF
+    End Function
+
+    Public Function FindH(ByVal pntOpen As Point) As Short  'This is the heuristic algorithim.  This is what can get better
+        Return -1 * 10 * ((pntOpen.X - endPoint.GetPositionInGrid.X) + (pntOpen.Y - endPoint.GetPositionInGrid.Y)) 'TODO: make this better.
+    End Function
 
     Public Sub CheckAdjacentTiles()
 

@@ -68,4 +68,14 @@ Public Class Tile
         Return isInOpen
     End Function
 
+    Private isInClosed As Boolean  'Holds if it is part of the open list
+    Public Sub SetIsInClosedList(ByVal blnValue As Boolean)
+        isInClosed = blnValue
+        pbxTile.Size = New Size(16, 16)
+    End Sub
+
+    Public Function IsInClosedList() As Boolean
+        Return isInClosed
+    End Function
+
 End Class
