@@ -25,11 +25,12 @@
         End If
     End Sub
 
-    Public Function GetPositionInGrid()
+    Public Function GetPositionInGrid() As Point
         Return New Point(pbxPlayer.Location.X \ 64, pbxPlayer.Location.Y \ 64)
     End Function
 
     Public Sub SetPositionInGrid(ByVal shtX As Short, ByVal shtY As Short)
         pbxPlayer.Location = New Point(shtX * 64, shtY * 64)
     End Sub
+
 End Class

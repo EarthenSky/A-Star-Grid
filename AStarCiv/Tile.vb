@@ -54,4 +54,18 @@ Public Class Tile
         Return tileType
     End Function
 
+    Public Function GetPositionInGrid() As Point
+        Return New Point(pbxTile.Location.X \ 64, pbxTile.Location.Y \ 64)
+    End Function
+
+    Private isInOpen As Boolean  'Holds if it is part of the open list
+    Public Sub SetIsInOpenList(ByVal blnValue As Boolean)
+        isInOpen = blnValue
+        pbxTile.Size = New Size(32, 32)
+    End Sub
+
+    Public Function IsInOpenList() As Boolean
+        Return isInOpen
+    End Function
+
 End Class

@@ -26,7 +26,7 @@
         End If
     End Sub
 
-    Public Function GetPositionInGrid()
+    Public Function GetPositionInGrid() As Point
         Return New Point(pbxEndPoint.Location.X \ 64, pbxEndPoint.Location.Y \ 64)
     End Function
 
