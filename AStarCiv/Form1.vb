@@ -1,4 +1,15 @@
-﻿
+﻿Imports System.Threading
+
+Public Structure FCostPoint
+    Sub New(ByVal shtF As Short, ByVal pnt As Point)
+        shtMainF = shtF
+        pntValue = pnt
+    End Sub
+
+    Public shtMainF As Short
+    Public pntValue As Point
+End Structure
+
 Public Class Form1
     'Gabe Stang
     'Civ-like unit pathfinding w/ A*.
@@ -47,15 +58,22 @@ Public Class Form1
     Public Sub StartPathFinding(ByVal sender As Object, ByVal e As KeyEventArgs) Handles Me.KeyDown
         If e.KeyCode = Keys.Space Then
             If blnIsPathFindingDone = False Then  'Finding path
-                Debug.Print(FindLowestFCost() & " = F")
-                Debug.Print(FindH(player.GetPositionInGrid()) & " = H")
-
                 pntMain = player.GetPositionInGrid()  'Make middle tile the maintile.
-                AddToOpen(mdaTiles(player.GetPositionInGrid().X, player.GetPositionInGrid().Y))  'Add current tile to open list
-                AddToClosedFromOpen(mdaTiles(player.GetPositionInGrid().X, player.GetPositionInGrid().Y))  'Add middle tile to closed
 
-                AddAdjacentTilesToOpen(player.GetPositionInGrid())
+                While endPoint.GetPositionInGrid <> pntMain  'Stops the loop when the loop hits the endpoint
+                    AddToOpen(mdaTiles(pntMain.X, pntMain.Y))  'Add current tile to open list
+                    AddToClosedFromOpen(mdaTiles(pntMain.X, pntMain.Y))  'Add middle tile to closed
 
+                    AddAdjacentTilesToOpen(pntMain)  'Adds 8 tiles around the main tile to the open list
+
+                    pntMain = FindLowestFCostInSet(lstOpen).pntValue  'Makes the main pnt the lowest Fcost.
+                    AddToClosedFromOpen(mdaTiles(pntMain.X, pntMain.Y))  'Makes it closed.
+                    Thread.Sleep(200)  'Makes movement slower.
+                End While
+
+                'DebugStuff ___________________________________________
+                Debug.Print(FindLowestFCostInSet(lstOpen).ToString & " = F")
+                Debug.Print(FindH(player.GetPositionInGrid()) & " = H")
             Else  'Moving each turn (nope)
 
             End If
@@ -121,11 +139,12 @@ Public Class Form1
         End If
     End Sub
 
-    Public Function FindLowestFCost() As Short 'also adds f-cost to current tile.
+    'Probably Works
+    Public Function FindLowestFCostInSet(ByVal lst As List(Of Point)) As FCostPoint  'also adds f-cost to current tile.
         Dim shtMainF As Short = 32000
         Dim pntValue As Point
 
-        For Each pntOpen In lstOpen
+        For Each pntOpen In lst
             Dim shtTempF As Short = 0
 
             Dim blnCutOffFirstValue As Boolean = False
@@ -159,14 +178,70 @@ Public Class Form1
                 pntValue = pntOpen
             End If
         Next
-        Return shtMainF
+        Return New FCostPoint(shtMainF, pntValue)  'Outputs the F cost and the block that has it.
     End Function
 
     Public Function FindH(ByVal pntOpen As Point) As Short  'This is the heuristic algorithim.  This is what can get better
         Return -1 * 10 * ((pntOpen.X - endPoint.GetPositionInGrid.X) + (pntOpen.Y - endPoint.GetPositionInGrid.Y)) 'TODO: make this better.
     End Function
 
-    Public Sub CheckAdjacentTiles()
+    Public Sub CheckAdjacentTiles(ByVal pntMainPoint As Point)
+        Dim lstTempAdjacent As New List(Of Point)
+        'Adds tiles to the list
+        If pntMainPoint.Y > 0 Then  'Makes sure that it doesn't look for a non-existant block ABOVE it.
+            If mdaTiles(pntMainPoint.X, pntMainPoint.Y - 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X, pntMainPoint.Y - 1).IsInOpenList = True Then  'Adds the block if it is walkable and has not already been added
+                lstTempAdjacent.Add(New Point(pntMainPoint.X, pntMainPoint.Y - 1))
+            End If
+            If pntMainPoint.X > 0 Then  'Makes sure that it doesn't look for a non-existant block to the LEFT of it.
+                If mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y - 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y - 1).IsInOpenList = True Then   'Adds the block if it is walkable and has not already been added
+                    lstTempAdjacent.Add(New Point(pntMainPoint.X - 1, pntMainPoint.Y - 1))
+                End If
+            End If
+            If pntMainPoint.X < 7 Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
+                If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y - 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y - 1).IsInOpenList = True Then   'Adds the block if it is walkable and has not already been added
+                    lstTempAdjacent.Add(New Point(pntMainPoint.X + 1, pntMainPoint.Y - 1))
+                End If
+            End If
+        End If
+
+        If pntMainPoint.X > 0 Then  'Makes sure that it doesn't look for a non-existant block to the LEFT of it.
+            If mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y).IsInOpenList = True Then   'Adds the block if it is walkable and has not already been added
+                lstTempAdjacent.Add(New Point(pntMainPoint.X - 1, pntMainPoint.Y))
+            End If
+        End If
+
+        If pntMainPoint.X < 7 Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
+            If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y).IsInOpenList = True Then   'Adds the block if it is walkable and has not already been added
+                lstTempAdjacent.Add(New Point(pntMainPoint.X + 1, pntMainPoint.Y))
+            End If
+        End If
+
+        If pntMainPoint.Y < 7 Then  'Makes sure that it doesn't look for a non-existant block BELLOW it.
+            If mdaTiles(pntMainPoint.X, pntMainPoint.Y + 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X, pntMainPoint.Y + 1).IsInOpenList = True Then  'Adds the block if it is walkable and has not already been added
+                lstTempAdjacent.Add(New Point(pntMainPoint.X, pntMainPoint.Y + 1))
+            End If
+            If pntMainPoint.X > 0 Then  'Makes sure that it doesn't look for a non-existant block to the LEFT of it.
+                If mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y + 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y + 1).IsInOpenList = True Then   'Adds the block if it is walkable and has not already been added
+                    lstTempAdjacent.Add(New Point(pntMainPoint.X - 1, pntMainPoint.Y + 1))
+                End If
+            End If
+            If pntMainPoint.X < 7 Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
+                If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y + 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y + 1).IsInOpenList = True Then   'Adds the block if it is walkable and has not already been added
+                    lstTempAdjacent.Add(New Point(pntMainPoint.X + 1, pntMainPoint.Y + 1))
+                End If
+            End If
+        End If
+
+        Dim shtLowestInSet As FCostPoint = FindLowestFCostInSet(lstTempAdjacent)  'Finds Lowest F
+
+        'G Cost
+        If shtLowestInSet.shtMainF - FindH(shtLowestInSet.pntValue) <= Then
+
+        End If
+
+    End Sub
+
+    Public Sub DeleteUnusedTiles()
 
     End Sub
 End Class
