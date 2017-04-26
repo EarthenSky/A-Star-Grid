@@ -61,14 +61,19 @@ Public Class Form1
                 pntMain = player.GetPositionInGrid()  'Make middle tile the maintile.
 
                 While endPoint.GetPositionInGrid <> pntMain  'Stops the loop when the loop hits the endpoint
+                    'STEP 1
                     AddToOpen(mdaTiles(pntMain.X, pntMain.Y))  'Add current tile to open list
                     AddToClosedFromOpen(mdaTiles(pntMain.X, pntMain.Y))  'Add middle tile to closed
 
                     AddAdjacentTilesToOpen(pntMain)  'Adds 8 tiles around the main tile to the open list
 
+                    'STEP 2
+                    'Here
+
+                    'STEP 3
                     pntMain = FindLowestFCostInSet(lstOpen).pntValue  'Makes the main pnt the lowest Fcost.
                     AddToClosedFromOpen(mdaTiles(pntMain.X, pntMain.Y))  'Makes it closed.
-                    Thread.Sleep(200)  'Makes movement slower.
+                    Thread.Sleep(500)  'Makes movement slower.
                 End While
 
                 'DebugStuff ___________________________________________
@@ -172,6 +177,47 @@ Public Class Form1
             End If
 
             shtTempF += FindH(pntOpen)
+            Debug.Print(FindH(pntOpen).ToString & " H45")
+            If shtTempF <= shtMainF Then 'If the current open tile's f is the smallest make it the main F
+                shtMainF = shtTempF
+                pntValue = pntOpen
+            End If
+        Next
+        Return New FCostPoint(shtMainF, pntValue)  'Outputs the F cost and the block that has it.
+    End Function
+
+    Public Function FindLowestGCostInSetWithoutLastIndex(ByVal lst As List(Of Point)) As FCostPoint  'also adds f-cost to current tile.  Used only for step 2.
+        Dim shtMainF As Short = 32000
+        Dim pntValue As Point
+        Dim lstClosedTemp As List(Of Point) = lstClosed
+        DeleteUnusedTiles(lstClosedTemp)
+
+        For Each pntOpen In lst
+            Dim shtTempF As Short = 0
+
+            Dim blnCutOffFirstValue As Boolean = False
+            For Each pntClosed In lstClosedTemp  'Calculates the G cost of the tiles before it (In closed list)
+                If blnCutOffFirstValue = False Then
+                    blnCutOffFirstValue = True
+                    Continue For
+                End If
+                If mdaTiles(pntClosed.X, pntClosed.Y).GetTileType = TileType.Normal Then
+                    shtTempF += 10
+                ElseIf mdaTiles(pntClosed.X, pntClosed.Y).GetTileType = TileType.Hindering Then
+                    shtTempF += 20
+                ElseIf mdaTiles(pntClosed.X, pntClosed.Y).GetTileType = TileType.Dangerous Then
+                    shtTempF += 40
+                End If
+            Next
+
+            'Calculates the G cost of the current open tile.
+            If mdaTiles(pntOpen.X, pntOpen.Y).GetTileType = TileType.Normal Then
+                shtTempF += 10
+            ElseIf mdaTiles(pntOpen.X, pntOpen.Y).GetTileType = TileType.Hindering Then
+                shtTempF += 20
+            ElseIf mdaTiles(pntOpen.X, pntOpen.Y).GetTileType = TileType.Dangerous Then
+                shtTempF += 40
+            End If
 
             If shtTempF <= shtMainF Then 'If the current open tile's f is the smallest make it the main F
                 shtMainF = shtTempF
@@ -182,7 +228,8 @@ Public Class Form1
     End Function
 
     Public Function FindH(ByVal pntOpen As Point) As Short  'This is the heuristic algorithim.  This is what can get better
-        Return -1 * 10 * ((pntOpen.X - endPoint.GetPositionInGrid.X) + (pntOpen.Y - endPoint.GetPositionInGrid.Y)) 'TODO: make this better.
+        Dim shtToReturn = 10 * (Math.Abs(pntOpen.X - endPoint.GetPositionInGrid.X) + Math.Abs(pntOpen.Y - endPoint.GetPositionInGrid.Y)) 'TODO: make this better.
+        Return shtToReturn
     End Function
 
     Public Sub CheckAdjacentTiles(ByVal pntMainPoint As Point)
@@ -235,13 +282,13 @@ Public Class Form1
         Dim shtLowestInSet As FCostPoint = FindLowestFCostInSet(lstTempAdjacent)  'Finds Lowest F
 
         'G Cost
-        If shtLowestInSet.shtMainF - FindH(shtLowestInSet.pntValue) <= Then
-
+        If shtLowestInSet.shtMainF - FindH(shtLowestInSet.pntValue) <= 0 Then
+            'TODO: THIS
         End If
 
     End Sub
 
-    Public Sub DeleteUnusedTiles()
-
-    End Sub
+    Public Function DeleteUnusedTiles(ByVal lstClosed As List(Of Point), ) As List(Of Point)  'Deletes the unneeded tiles from a closed or temp closed list.
+        'TODO: THIS
+    End Function
 End Class
