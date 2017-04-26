@@ -190,7 +190,7 @@ Public Class Form1
         Dim shtMainF As Short = 32000
         Dim pntValue As Point
         Dim lstClosedTemp As List(Of Point) = lstClosed
-        DeleteUnusedTiles(lstClosedTemp)
+        lstClosedTemp.RemoveAt(lstClosedTemp.Count - 1) 'Removes last tile
 
         For Each pntOpen In lst
             Dim shtTempF As Short = 0
@@ -279,16 +279,16 @@ Public Class Form1
             End If
         End If
 
-        Dim shtLowestInSet As FCostPoint = FindLowestFCostInSet(lstTempAdjacent)  'Finds Lowest F
+        Dim shtLowestInSet As FCostPoint = FindLowestGCostInSetWithoutLastIndex(lstTempAdjacent) 'Finds Lowest G
 
-        'G Cost
-        If shtLowestInSet.shtMainF - FindH(shtLowestInSet.pntValue) <= 0 Then
-            'TODO: THIS
-        End If
+        'G Cost of lowest 
+        'If shtLowestInSet.shtMainF <= pntMain Then
+        '    'TODO: THIS
+        'End If
 
     End Sub
 
-    Public Function DeleteUnusedTiles(ByVal lstClosed As List(Of Point), ) As List(Of Point)  'Deletes the unneeded tiles from a closed or temp closed list.
-        'TODO: THIS
-    End Function
+    Public Sub DeleteUnusedTiles()  'Checks for and deletes the unneeded tiles in the closed list.
+        'TODO: THIS?
+    End Sub
 End Class
