@@ -298,12 +298,21 @@ Public Class Form1
         Dim pntTemp As Point
         Dim shtIndex As Short = 0
         While pntTemp <> endPoint.GetPositionInGrid() 'Goes throung the entire path.
-            pntTemp = lstClosed(shtIndex)
+            Try
+                pntTemp = lstClosed(shtIndex)
 
-            If PointsAreAdjacent(pntTemp, mdaTiles(pntTemp.X, pntTemp.Y).GetLastTilePoint) Then
-                'TODO: THIS STUFF   
-            End If
-
+                If PointsAreAdjacent(pntTemp, mdaTiles(pntTemp.X, pntTemp.Y).GetLastTilePoint) Then
+                    shtIndex += 1
+                Else
+                    mdaTiles(lstClosed(shtIndex - 1).X, lstClosed(shtIndex - 1).Y).SetIsInClosedList(False)
+                    mdaTiles(lstClosed(shtIndex - 1).X, lstClosed(shtIndex - 1).Y).pbxTile.Size = New Size(64, 64)
+                    lstClosed.RemoveAt(shtIndex - 1)
+                    mdaTiles(pntTemp.X, pntTemp.Y).SetLastTilePoint(lstClosed(shtIndex - 1))
+                End If
+            Catch ex As Exception
+                Debug.Print("oops")
+                Exit Sub
+            End Try
         End While
     End Sub
 
