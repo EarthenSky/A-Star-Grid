@@ -34,6 +34,8 @@ Public Class Form1
     Public imgUnit As Image
     Public imgEndPoint As Image
 
+    Private blnIsPathFindingDone = False
+
     Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
         'Assigns textures to all of the image variables.
         imgGrassland = Image.FromFile(strCurrentFileDirectory & "GrassLandTile.png")
@@ -53,38 +55,6 @@ Public Class Form1
 
     End Sub
 
-    Private blnIsPathFindingDone = False
-
-    Public Sub StartPathFinding(ByVal sender As Object, ByVal e As KeyEventArgs) Handles Me.KeyDown
-        If e.KeyCode = Keys.Space Then
-            If blnIsPathFindingDone = False Then  'Finding path
-                pntMain = player.GetPositionInGrid()  'Make middle tile the maintile.
-
-                While endPoint.GetPositionInGrid <> pntMain  'Stops the loop when the loop hits the endpoint
-                    'STEP 1
-                    AddToOpen(mdaTiles(pntMain.X, pntMain.Y))  'Add current tile to open list
-                    AddToClosedFromOpen(mdaTiles(pntMain.X, pntMain.Y))  'Add middle tile to closed
-
-                    AddAdjacentTilesToOpen(pntMain)  'Adds 8 tiles around the main tile to the open list
-
-                    'STEP 2
-                    'Here
-
-                    'STEP 3
-                    pntMain = FindLowestFCostInSet(lstOpen).pntValue  'Makes the main pnt the lowest Fcost.
-                    AddToClosedFromOpen(mdaTiles(pntMain.X, pntMain.Y))  'Makes it closed.
-                    Thread.Sleep(500)  'Makes movement slower.
-                End While
-
-                'DebugStuff ___________________________________________
-                Debug.Print(FindLowestFCostInSet(lstOpen).ToString & " = F")
-                Debug.Print(FindH(player.GetPositionInGrid()) & " = H")
-            Else  'Moving each turn (nope)
-
-            End If
-        End If
-    End Sub
-
     Public Sub AddToOpen(ByRef MainTile As Tile)  'Use this to add items to the OpenList (Maybe ByVal)
         MainTile.SetIsInOpenList(True)
         lstOpen.Add(MainTile.GetPositionInGrid)
@@ -97,6 +67,38 @@ Public Class Form1
         lstClosed.Add(MainTile.GetPositionInGrid)
     End Sub
 
+    Public Sub StartPathFinding(ByVal sender As Object, ByVal e As KeyEventArgs) Handles Me.KeyDown
+        If e.KeyCode = Keys.Space Then
+            If blnIsPathFindingDone = False Then  'Finding path
+                'STEP 0
+                pntMain = player.GetPositionInGrid()  'Make middle tile the maintile.
+                AddToOpen(mdaTiles(pntMain.X, pntMain.Y))  'Add current tile to open list
+
+                While endPoint.GetPositionInGrid <> pntMain  'Stops the loop when the loop hits the endpoint
+                    'STEP 1
+                    AddToClosedFromOpen(mdaTiles(pntMain.X, pntMain.Y))  'Add middle tile to closed
+                    AddAdjacentTilesToOpen(pntMain)  'Adds 8 tiles around the main tile to the open list
+
+                    'STEP 2
+                    'Here
+
+                    'STEP 3
+                    pntMain = FindLowestFCostInSet(lstOpen).pntValue  'Makes the main pnt the lowest Fcost.
+                    Thread.Sleep(500)  'Makes movement slower.
+                End While
+
+                'STEP 4
+
+                'DebugStuff ___________________________________________
+                Debug.Print(FindLowestFCostInSet(lstOpen).ToString & " = F")
+                Debug.Print(FindH(player.GetPositionInGrid()) & " = H")
+            Else  'Moving each turn (nope)
+
+            End If
+        End If
+    End Sub
+
+  
     'Works
     Public Sub AddAdjacentTilesToOpen(ByVal pntMainPoint As Point)  'Adds the 8 blocks adjacent to the main point if they are able to be added.
         If pntMainPoint.Y > 0 Then  'Makes sure that it doesn't look for a non-existant block ABOVE it.

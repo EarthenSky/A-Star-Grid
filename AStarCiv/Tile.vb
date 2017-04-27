@@ -58,6 +58,15 @@ Public Class Tile
         Return New Point(pbxTile.Location.X \ 64, pbxTile.Location.Y \ 64)
     End Function
 
+    Private pntLastTile As Point  'Holds last tile position
+    Public Sub SetLastTilePoint(ByVal pntLastPoint As Point)
+        pntLastTile = pntLastPoint
+    End Sub
+
+    Public Function GetLastTilePoint() As Point
+        Return pntLastTile
+    End Function
+
     Private isInOpen As Boolean  'Holds if it is part of the open list
     Public Sub SetIsInOpenList(ByVal blnValue As Boolean)
         isInOpen = blnValue
