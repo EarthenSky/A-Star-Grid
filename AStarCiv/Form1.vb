@@ -83,11 +83,15 @@ Public Class Form1
                     'Here
 
                     'STEP 3
-                    pntMain = FindLowestFCostInSet(lstOpen).pntValue  'Makes the main pnt the lowest Fcost.
-                    Thread.Sleep(500)  'Makes movement slower.
+                    Dim pntTemp As Point = FindLowestFCostInSet(lstOpen).pntValue
+                    mdaTiles(pntTemp.X, pntTemp.Y).SetLastTilePoint(pntMain)  'Sets the last tile
+                    pntMain = pntTemp  'Makes the main pnt the lowest Fcost.
+
+                    Thread.Sleep(400)  'Makes movement slower.
                 End While
 
                 'STEP 4
+                LastThing()
 
                 'DebugStuff ___________________________________________
                 Debug.Print(FindLowestFCostInSet(lstOpen).ToString & " = F")
@@ -290,7 +294,25 @@ Public Class Form1
 
     End Sub
 
-    Public Sub DeleteUnusedTiles()  'Checks for and deletes the unneeded tiles in the closed list.
-        'TODO: THIS?
+    Public Sub LastThing()  'Checks for and deletes the unneeded tiles in the closed list.  'Crops the path.
+        Dim pntTemp As Point
+        Dim shtIndex As Short = 0
+        While pntTemp <> endPoint.GetPositionInGrid() 'Goes throung the entire path.
+            pntTemp = lstClosed(shtIndex)
+
+            If PointsAreAdjacent(pntTemp, mdaTiles(pntTemp.X, pntTemp.Y).GetLastTilePoint) Then
+                'TODO: THIS STUFF   
+            End If
+
+        End While
     End Sub
+
+    Public Function PointsAreAdjacent(ByVal pnt1 As Point, ByVal pnt2 As Point) As Boolean  'Checks if are adjacent
+        If pnt1.X <= pnt2.X + 1 And pnt1.X >= pnt2.X - 1 Then
+            If pnt1.Y <= pnt2.Y + 1 And pnt1.Y >= pnt2.Y - 1 Then
+                Return True  'Are adjacent
+            End If
+        End If
+        Return False  'Are not adjacent
+    End Function
 End Class
