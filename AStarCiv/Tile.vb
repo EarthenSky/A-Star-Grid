@@ -9,15 +9,22 @@ End Enum
 Public Class Tile
     Private tileType As TileType  'Holds the type of tile this is.
     Public WithEvents pbxTile As PictureBox  'Holds position and stuff.
+    Public lblID As Label  'Holds label stuff for debug
 
     Sub New(ByVal tileType As TileType, ByVal pntPosition As Point, ByVal imgTexture As Image, ByRef controls As Control.ControlCollection)
         Me.tileType = tileType
+
+        lblID = New Label()
+        lblID.Location = New Point(pntPosition.X, pntPosition.Y + 48) 'set your location
+        lblID.Size = New System.Drawing.Size(32, 16) 'set your size (if required)
+        lblID.Text = "On" 'set the text for your label
+
+        controls.Add(lblID)
 
         pbxTile = New PictureBox()
         pbxTile.Image = imgTexture
         pbxTile.Location = pntPosition
         pbxTile.Size = New Size(64, 64)
-        pbxTile.BackColor = Color.Chocolate
 
         controls.Add(pbxTile)
     End Sub

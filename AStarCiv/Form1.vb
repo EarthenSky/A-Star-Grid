@@ -65,6 +65,9 @@ Public Class Form1
         MainTile.SetIsInClosedList(True)
         lstOpen.Remove(MainTile.GetPositionInGrid)
         lstClosed.Add(MainTile.GetPositionInGrid)
+        MainTile.lblID.Text = lstClosed.Count - 1
+        MainTile.lblID.BackColor = Color.Black
+        MainTile.lblID.ForeColor = Color.White
     End Sub
 
     Public Sub StartPathFinding(ByVal sender As Object, ByVal e As KeyEventArgs) Handles Me.KeyDown
@@ -80,7 +83,7 @@ Public Class Form1
                     AddAdjacentTilesToOpen(pntMain)  'Adds 8 tiles around the main tile to the open list
 
                     'STEP 2
-                    'Here
+                    '
 
                     'STEP 3
                     Dim pntTemp As Point = FindLowestFCostInSet(lstOpen).pntValue
@@ -91,7 +94,7 @@ Public Class Form1
                 End While
 
                 'STEP 4
-                LastThing()
+                'LastThing()
 
                 'DebugStuff ___________________________________________
                 Debug.Print(FindLowestFCostInSet(lstOpen).ToString & " = F")
@@ -102,7 +105,81 @@ Public Class Form1
         End If
     End Sub
 
-  
+    Public Sub AutoChangeLastTile(ByVal pntMainPoint As Point) 'Adds adjacent closed tiles to a temp list and finds the one that is furthest back in the closed list.  Highest G over 2.
+        Dim lstClosedTemp As New List(Of Point)
+
+        If pntMainPoint.Y > 0 Then  'Makes sure that it doesn't look for a non-existant block ABOVE it.
+            If mdaTiles(pntMainPoint.X, pntMainPoint.Y - 1).IsInClosedList = True Then  'Adds the block if it is not Walkable
+                lstClosedTemp.Add(New Point(pntMainPoint.X, pntMainPoint.Y - 1))
+            End If
+            If pntMainPoint.X > 0 Then  'Makes sure that it doesn't look for a non-existant block to the LEFT of it.
+                If mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y - 1).IsInClosedList = True Then   'Adds the block if it is not Walkable
+                    lstClosedTemp.Add(New Point(pntMainPoint.X - 1, pntMainPoint.Y - 1))
+                End If
+            End If
+            If pntMainPoint.X < 7 Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
+                If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y - 1).IsInClosedList = True Then   'Adds the block if it is not Walkable
+                    lstClosedTemp.Add(New Point(pntMainPoint.X + 1, pntMainPoint.Y - 1))
+                End If
+            End If
+        End If
+
+        If pntMainPoint.X > 0 Then  'Makes sure that it doesn't look for a non-existant block to the LEFT of it.
+            If mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y).IsInClosedList = True Then   'Adds the block if it is not Walkable
+                lstClosedTemp.Add(New Point(pntMainPoint.X - 1, pntMainPoint.Y))
+            End If
+        End If
+
+        If pntMainPoint.X < 7 Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
+            If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y).IsInClosedList = True Then   'Adds the block if it is not Walkable
+                lstClosedTemp.Add(New Point(pntMainPoint.X + 1, pntMainPoint.Y))
+            End If
+        End If
+
+        If pntMainPoint.Y < 7 Then  'Makes sure that it doesn't look for a non-existant block BELLOW it.
+            If mdaTiles(pntMainPoint.X, pntMainPoint.Y + 1).IsInClosedList = True Then  'Adds the block if it is not Walkable
+                lstClosedTemp.Add(New Point(pntMainPoint.X, pntMainPoint.Y + 1))
+            End If
+            If pntMainPoint.X > 0 Then  'Makes sure that it doesn't look for a non-existant block to the LEFT of it.
+                If mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y + 1).IsInClosedList = True Then   'Adds the block if it is not Walkable
+                    lstClosedTemp.Add(New Point(pntMainPoint.X - 1, pntMainPoint.Y + 1))
+                End If
+            End If
+            If pntMainPoint.X < 7 Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
+                If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y + 1).IsInClosedList = True Then   'Adds the block if it is not Walkable
+                    lstClosedTemp.Add(New Point(pntMainPoint.X + 1, pntMainPoint.Y + 1))
+                End If
+            End If
+        End If
+
+        Dim shtBiggestGDifference As Short = 0
+        Dim pntOutputPoint As New Point
+
+        For Each pnt In lstClosedTemp  'Looks through all adjacent closed objects and find the furthest one from the point.
+            Dim shtGDifference As Short = FindGCostOfTile(mdaTiles(pntMainPoint.X, pntMainPoint.Y)) - FindGCostOfTile(mdaTiles(pnt.X, pnt.Y))
+
+            If shtGDifference >= 2 And shtGDifference >= shtBiggestGDifference Then
+                shtBiggestGDifference = shtGDifference
+                pntOutputPoint = pnt
+            End If
+        Next
+
+        'sets the last tile point to the furthest away adjacent tile nulifying lots of unneeded tiles.
+        mdaTiles(pntMainPoint.X, pntMainPoint.Y).SetLastTilePoint(pntOutputPoint)
+    End Sub
+
+    Private Function FindGCostOfTile(ByVal tile As Tile) As Short
+        Dim pntTemp As Point = tile.GetPositionInGrid
+        Dim shtOutput As Short = 0
+
+        While pntTemp <> player.GetPositionInGrid
+            shtOutput += 1
+            pntTemp = mdaTiles(pntTemp.X, pntTemp.Y).GetLastTilePoint()
+        End While
+
+        Return shtOutput
+    End Function
+
     'Works
     Public Sub AddAdjacentTilesToOpen(ByVal pntMainPoint As Point)  'Adds the 8 blocks adjacent to the main point if they are able to be added.
         If pntMainPoint.Y > 0 Then  'Makes sure that it doesn't look for a non-existant block ABOVE it.
