@@ -1,6 +1,12 @@
 ﻿Public Class Player
     Private WithEvents pbxPlayer As PictureBox  'Holds position and stuff.
 
+    Public lstPath As New List(Of Point)
+
+    Public Const shtMaxMoves As Short = 2
+    Public shtMovesLeft As Short = 0
+
+
     Sub New(ByVal pntPosition As Point, ByVal imgTexture As Image, ByRef controls As Control.ControlCollection)
         pbxPlayer = New PictureBox()
         pbxPlayer.Image = imgTexture

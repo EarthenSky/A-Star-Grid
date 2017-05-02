@@ -83,29 +83,54 @@ Public Class Form1
                     AddAdjacentTilesToOpen(pntMain)  'Adds 8 tiles around the main tile to the open list
 
                     'STEP 2
-                    '
+                    AutoChangeLastTile(pntMain)
 
                     'STEP 3
                     Dim pntTemp As Point = FindLowestFCostInSet(lstOpen).pntValue
                     mdaTiles(pntTemp.X, pntTemp.Y).SetLastTilePoint(pntMain)  'Sets the last tile
                     pntMain = pntTemp  'Makes the main pnt the lowest Fcost.
 
-                    Thread.Sleep(400)  'Makes movement slower.
+                    Thread.Sleep(10)  'Makes movement slower.
                 End While
 
-                'STEP 4
-                'LastThing()
+                blnIsPathFindingDone = True
 
-                'DebugStuff ___________________________________________
-                Debug.Print(FindLowestFCostInSet(lstOpen).ToString & " = F")
-                Debug.Print(FindH(player.GetPositionInGrid()) & " = H")
-            Else  'Moving each turn (nope)
+                'Set the path.
+                For index As Short = lstClosed.Count - 2 To 0 Step -1
+                    player.lstPath.Add(lstClosed(index))
+                Next
+
+            Else  'Moving each turn
+                'sets movements for the turn
+                player.shtMovesLeft = player.shtMaxMoves
+
+                While player.shtMovesLeft > 0
+                    Dim pntTileToMoveTo As Point = player.lstPath(player.lstPath.Count - 2)
+
+                    If mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Normal Then
+                        player.shtMovesLeft -= 1
+
+                    ElseIf mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Hindering Or
+                           mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Dangerous And
+                           player.shtMovesLeft >= 2 Then
+                        player.shtMovesLeft -= 2
+
+                    Else
+                        Exit While
+                    End If
+
+                    player.SetPositionInGrid(pntTileToMoveTo.X, pntTileToMoveTo.Y)
+
+                    player.lstPath.RemoveAt(player.lstPath.Count - 2)
+                End While
 
             End If
         End If
     End Sub
 
     Public Sub AutoChangeLastTile(ByVal pntMainPoint As Point) 'Adds adjacent closed tiles to a temp list and finds the one that is furthest back in the closed list.  Highest G over 2.
+
+        'Makes a list of closed objects adjacent to main point.
         Dim lstClosedTemp As New List(Of Point)
 
         If pntMainPoint.Y > 0 Then  'Makes sure that it doesn't look for a non-existant block ABOVE it.
@@ -164,12 +189,15 @@ Public Class Form1
             End If
         Next
 
-        'sets the last tile point to the furthest away adjacent tile nulifying lots of unneeded tiles.
-        mdaTiles(pntMainPoint.X, pntMainPoint.Y).SetLastTilePoint(pntOutputPoint)
+        If pntOutputPoint <> New Point(0, 0) Then
+            'sets the last tile point to the furthest away adjacent tile nulifying lots of unneeded tiles.
+            mdaTiles(pntMainPoint.X, pntMainPoint.Y).SetLastTilePoint(pntOutputPoint)
+        End If
     End Sub
 
+    'NO WORK
     Private Function FindGCostOfTile(ByVal tile As Tile) As Short
-        Dim pntTemp As Point = tile.GetPositionInGrid
+        Dim pntTemp As Point = tile.GetPositionInGrid()
         Dim shtOutput As Short = 0
 
         While pntTemp <> player.GetPositionInGrid
@@ -371,27 +399,27 @@ Public Class Form1
 
     End Sub
 
-    Public Sub LastThing()  'Checks for and deletes the unneeded tiles in the closed list.  'Crops the path.
-        Dim pntTemp As Point
-        Dim shtIndex As Short = 0
-        While pntTemp <> endPoint.GetPositionInGrid() 'Goes throung the entire path.
-            Try
-                pntTemp = lstClosed(shtIndex)
-
-                If PointsAreAdjacent(pntTemp, mdaTiles(pntTemp.X, pntTemp.Y).GetLastTilePoint) Then
-                    shtIndex += 1
-                Else
-                    mdaTiles(lstClosed(shtIndex - 1).X, lstClosed(shtIndex - 1).Y).SetIsInClosedList(False)
-                    mdaTiles(lstClosed(shtIndex - 1).X, lstClosed(shtIndex - 1).Y).pbxTile.Size = New Size(64, 64)
-                    lstClosed.RemoveAt(shtIndex - 1)
-                    mdaTiles(pntTemp.X, pntTemp.Y).SetLastTilePoint(lstClosed(shtIndex - 1))
-                End If
-            Catch ex As Exception
-                Debug.Print("oops")
-                Exit Sub
-            End Try
-        End While
-    End Sub
+    'Public Sub LastThing()  'Checks for and deletes the unneeded tiles in the closed list.  'Crops the path.
+    'Dim pntTemp As Point
+    'Dim shtIndex As Short = 0
+    '   While pntTemp <> endPoint.GetPositionInGrid() 'Goes throung the entire path.
+    '      Try
+    '         pntTemp = lstClosed(shtIndex)
+    '
+    '           If PointsAreAdjacent(pntTemp, mdaTiles(pntTemp.X, pntTemp.Y).GetLastTilePoint) Then
+    '              shtIndex += 1
+    '
+    '             mdaTiles(lstClosed(shtIndex - 1).X, lstClosed(shtIndex - 1).Y).SetIsInClosedList(False)
+    '            mdaTiles(lstClosed(shtIndex - 1).X, lstClosed(shtIndex - 1).Y).pbxTile.Size = New Size(64, 64)
+    '           lstClosed.RemoveAt(shtIndex - 1)
+    '          mdaTiles(pntTemp.X, pntTemp.Y).SetLastTilePoint(lstClosed(shtIndex - 1))
+    '     End If
+    '     Catch ex As Exception
+    '        Debug.Print("oops")
+    '       Exit Sub
+    '  End Try
+    'End While
+    'End Sub
 
     Public Function PointsAreAdjacent(ByVal pnt1 As Point, ByVal pnt2 As Point) As Boolean  'Checks if are adjacent
         If pnt1.X <= pnt2.X + 1 And pnt1.X >= pnt2.X - 1 Then
