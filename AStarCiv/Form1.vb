@@ -12,9 +12,9 @@ End Structure
 
 Public Class Form1
     'Gabe Stang
-    'Civ-like unit pathfinding w/ A*.
+    'Civ-like unit pathfinding w/ psudeo A*.
     ' 
-    'You can create a grid of tiles, grey is impassable, light green is normal, dark green slows the player.  The player (red) finds the fastest way to the endpoint (blue)
+    'You can create an 8x8 grid of tiles, grey is impassable, light green is normal, dark green slows the player's movement.  The player, (red,) finds the fastest way to the endpoint, (blue.)
 
     Private player As Player
 
@@ -93,37 +93,46 @@ Public Class Form1
                     Thread.Sleep(10)  'Makes movement slower.
                 End While
 
+                AddToClosedFromOpen(mdaTiles(pntMain.X, pntMain.Y))
+
                 blnIsPathFindingDone = True
 
                 'Set the path.
-                For index As Short = lstClosed.Count - 2 To 0 Step -1
-                    player.lstPath.Add(lstClosed(index))
-                Next
+                Dim pntTempPath As Point = lstClosed(lstClosed.Count - 1)
+                While pntTempPath <> player.GetPositionInGrid
+                    player.lstPath.Add(pntTempPath)
+                    pntTempPath = mdaTiles(pntTempPath.X, pntTempPath.Y).GetLastTilePoint
+                End While
 
             Else  'Moving each turn
                 'sets movements for the turn
                 player.shtMovesLeft = player.shtMaxMoves
 
                 While player.shtMovesLeft > 0
-                    Dim pntTileToMoveTo As Point = player.lstPath(player.lstPath.Count - 2)
+                    Dim pntTileToMoveTo As Point = player.lstPath(player.lstPath.Count - 1)
 
-                    If mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Normal Then
-                        player.shtMovesLeft -= 1
+                    If player.shtMovesLeft >= 2 Then
+                        If mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Normal Then
+                            player.shtMovesLeft -= 1
 
-                    ElseIf mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Hindering Or
-                           mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Dangerous And
-                           player.shtMovesLeft >= 2 Then
-                        player.shtMovesLeft -= 2
+                        ElseIf mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Hindering Or
+                               mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Dangerous Then
+                            player.shtMovesLeft -= 2
 
-                    Else
-                        Exit While
+                        End If
+                    ElseIf player.shtMovesLeft <= 1 Then
+                        If mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Normal Then
+                            player.shtMovesLeft -= 1
+
+                        ElseIf mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Hindering Or
+                               mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Dangerous Then
+                            player.shtMovesLeft = 0
+                            Exit While
+                        End If
                     End If
-
                     player.SetPositionInGrid(pntTileToMoveTo.X, pntTileToMoveTo.Y)
-
-                    player.lstPath.RemoveAt(player.lstPath.Count - 2)
+                    player.lstPath.RemoveAt(player.lstPath.Count - 1)
                 End While
-
             End If
         End If
     End Sub
@@ -178,10 +187,10 @@ Public Class Form1
         End If
 
         Dim shtBiggestGDifference As Short = 0
-        Dim pntOutputPoint As New Point
+        Dim pntOutputPoint As New Point(-1, -1) '(-1, -1) Means point is invalid and does not have a value assigned.
 
         For Each pnt In lstClosedTemp  'Looks through all adjacent closed objects and find the furthest one from the point.
-            Dim shtGDifference As Short = FindGCostOfTile(mdaTiles(pntMainPoint.X, pntMainPoint.Y)) - FindGCostOfTile(mdaTiles(pnt.X, pnt.Y))
+            Dim shtGDifference As Short = lstClosed.IndexOf(New Point(pntMainPoint.X, pntMainPoint.Y)) - lstClosed.IndexOf(New Point(pnt.X, pnt.Y))
 
             If shtGDifference >= 2 And shtGDifference >= shtBiggestGDifference Then
                 shtBiggestGDifference = shtGDifference
@@ -189,7 +198,7 @@ Public Class Form1
             End If
         Next
 
-        If pntOutputPoint <> New Point(0, 0) Then
+        If pntOutputPoint <> New Point(-1, -1) Then 'Makes sure point is valid
             'sets the last tile point to the furthest away adjacent tile nulifying lots of unneeded tiles.
             mdaTiles(pntMainPoint.X, pntMainPoint.Y).SetLastTilePoint(pntOutputPoint)
         End If
