@@ -20,7 +20,9 @@ Public Class Form1
 
     Private endPoint As EndPoint
 
-    Private mdaTiles(8, 8) As Tile  'Holds tile values.
+    Const shtMdaTilesAxisSize = 14
+
+    Private mdaTiles(15, 15) As Tile  'Holds tile values.
     Private lstOpen As New List(Of Point)
     Private lstClosed As New List(Of Point)
     Private pntMain As Point
@@ -47,8 +49,8 @@ Public Class Form1
         player = New Player(New Point(0, 0), imgUnit, Controls)
         endPoint = New EndPoint(New Point(7 * 64, 7 * 64), imgEndPoint, Controls)
 
-        For indexX As Short = 0 To 7
-            For indexY As Short = 0 To 7
+        For indexX As Short = 0 To shtMdaTilesAxisSize
+            For indexY As Short = 0 To shtMdaTilesAxisSize
                 mdaTiles(indexX, indexY) = New Tile(TileType.Normal, New Point(indexX * 64, indexY * 64), imgGrassland, Controls)
             Next
         Next
@@ -90,7 +92,7 @@ Public Class Form1
                     mdaTiles(pntTemp.X, pntTemp.Y).SetLastTilePoint(pntMain)  'Sets the last tile
                     pntMain = pntTemp  'Makes the main pnt the lowest Fcost.
 
-                    Thread.Sleep(10)  'Makes movement slower.
+                    'Thread.Sleep(5)  'Makes movement slower.
                 End While
 
                 AddToClosedFromOpen(mdaTiles(pntMain.X, pntMain.Y))
@@ -105,33 +107,63 @@ Public Class Form1
                 End While
 
             Else  'Moving each turn
-                'sets movements for the turn
-                player.shtMovesLeft = player.shtMaxMoves
+                While True
+                    'sets movements for the turn
+                    player.shtMovesLeft = player.shtMaxMoves
 
-                While player.shtMovesLeft > 0
-                    Dim pntTileToMoveTo As Point = player.lstPath(player.lstPath.Count - 1)
+                    While player.shtMovesLeft > 0
+                        Dim pntTileToMoveTo As Point = player.lstPath(player.lstPath.Count - 1)
 
-                    If player.shtMovesLeft >= 2 Then
-                        If mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Normal Then
-                            player.shtMovesLeft -= 1
+                        If player.shtMovesLeft >= 2 Then
+                            If mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Normal Then
+                                player.shtMovesLeft -= 1
 
-                        ElseIf mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Hindering Or
-                               mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Dangerous Then
-                            player.shtMovesLeft -= 2
+                            ElseIf mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Hindering Or
+                                   mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Dangerous Then
+                                player.shtMovesLeft -= 2
 
+                            End If
+                        ElseIf player.shtMovesLeft <= 1 Then
+                            If mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Normal Then
+                                player.shtMovesLeft -= 1
+
+                            ElseIf mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Hindering Or
+                                   mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Dangerous Then
+                                player.shtMovesLeft = 0
+                                Exit While
+                            End If
                         End If
-                    ElseIf player.shtMovesLeft <= 1 Then
-                        If mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Normal Then
-                            player.shtMovesLeft -= 1
+                        player.SetPositionInGrid(pntTileToMoveTo.X, pntTileToMoveTo.Y)
+                        player.lstPath.RemoveAt(player.lstPath.Count - 1)
 
-                        ElseIf mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Hindering Or
-                               mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Dangerous Then
-                            player.shtMovesLeft = 0
-                            Exit While
+                        'Resets the Lists if Finished
+                        If player.lstPath.Count = 0 Then
+                            player.lstPath.Clear()
+
+                            For index As Short = lstClosed.Count - 1 To 0 Step -1
+                                mdaTiles(lstClosed(index).X, lstClosed(index).Y).SetIsInClosedList(False)
+                                mdaTiles(lstClosed(index).X, lstClosed(index).Y).lblID.Text = "On"
+                                mdaTiles(lstClosed(index).X, lstClosed(index).Y).lblID.BackColor = Color.LightGray
+                                mdaTiles(lstClosed(index).X, lstClosed(index).Y).lblID.ForeColor = Color.Black
+                                mdaTiles(lstClosed(index).X, lstClosed(index).Y).SetLastTilePoint(New Point(0, 0))
+                                mdaTiles(lstClosed(index).X, lstClosed(index).Y).pbxTile.Size = New Size(64, 64)
+                                lstClosed.RemoveAt(index)
+                            Next
+
+                            For index As Short = lstOpen.Count - 1 To 0 Step -1
+                                mdaTiles(lstOpen(index).X, lstOpen(index).Y).SetIsInOpenList(False)
+                                mdaTiles(lstOpen(index).X, lstOpen(index).Y).lblID.Text = "On"
+                                mdaTiles(lstOpen(index).X, lstOpen(index).Y).SetLastTilePoint(New Point(0, 0))
+                                mdaTiles(lstOpen(index).X, lstOpen(index).Y).pbxTile.Size = New Size(64, 64)
+                                lstOpen.RemoveAt(index)
+                            Next
+
+                            blnIsPathFindingDone = False
+                            Exit Sub
                         End If
-                    End If
-                    player.SetPositionInGrid(pntTileToMoveTo.X, pntTileToMoveTo.Y)
-                    player.lstPath.RemoveAt(player.lstPath.Count - 1)
+
+                    End While
+                    Thread.Sleep(25)  'Makes movement slower.
                 End While
             End If
         End If
@@ -151,7 +183,7 @@ Public Class Form1
                     lstClosedTemp.Add(New Point(pntMainPoint.X - 1, pntMainPoint.Y - 1))
                 End If
             End If
-            If pntMainPoint.X < 7 Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
+            If pntMainPoint.X < shtMdaTilesAxisSize Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
                 If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y - 1).IsInClosedList = True Then   'Adds the block if it is not Walkable
                     lstClosedTemp.Add(New Point(pntMainPoint.X + 1, pntMainPoint.Y - 1))
                 End If
@@ -164,13 +196,13 @@ Public Class Form1
             End If
         End If
 
-        If pntMainPoint.X < 7 Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
+        If pntMainPoint.X < shtMdaTilesAxisSize Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
             If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y).IsInClosedList = True Then   'Adds the block if it is not Walkable
                 lstClosedTemp.Add(New Point(pntMainPoint.X + 1, pntMainPoint.Y))
             End If
         End If
 
-        If pntMainPoint.Y < 7 Then  'Makes sure that it doesn't look for a non-existant block BELLOW it.
+        If pntMainPoint.Y < shtMdaTilesAxisSize Then  'Makes sure that it doesn't look for a non-existant block BELLOW it.
             If mdaTiles(pntMainPoint.X, pntMainPoint.Y + 1).IsInClosedList = True Then  'Adds the block if it is not Walkable
                 lstClosedTemp.Add(New Point(pntMainPoint.X, pntMainPoint.Y + 1))
             End If
@@ -179,7 +211,7 @@ Public Class Form1
                     lstClosedTemp.Add(New Point(pntMainPoint.X - 1, pntMainPoint.Y + 1))
                 End If
             End If
-            If pntMainPoint.X < 7 Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
+            If pntMainPoint.X < shtMdaTilesAxisSize Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
                 If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y + 1).IsInClosedList = True Then   'Adds the block if it is not Walkable
                     lstClosedTemp.Add(New Point(pntMainPoint.X + 1, pntMainPoint.Y + 1))
                 End If
@@ -204,19 +236,6 @@ Public Class Form1
         End If
     End Sub
 
-    'NO WORK
-    Private Function FindGCostOfTile(ByVal tile As Tile) As Short
-        Dim pntTemp As Point = tile.GetPositionInGrid()
-        Dim shtOutput As Short = 0
-
-        While pntTemp <> player.GetPositionInGrid
-            shtOutput += 1
-            pntTemp = mdaTiles(pntTemp.X, pntTemp.Y).GetLastTilePoint()
-        End While
-
-        Return shtOutput
-    End Function
-
     'Works
     Public Sub AddAdjacentTilesToOpen(ByVal pntMainPoint As Point)  'Adds the 8 blocks adjacent to the main point if they are able to be added.
         If pntMainPoint.Y > 0 Then  'Makes sure that it doesn't look for a non-existant block ABOVE it.
@@ -228,7 +247,7 @@ Public Class Form1
                     AddToOpen(mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y - 1))
                 End If
             End If
-            If pntMainPoint.X < 7 Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
+            If pntMainPoint.X < shtMdaTilesAxisSize Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
                 If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y - 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y - 1).IsInOpenList = False And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y - 1).IsInClosedList = False Then   'Adds the block if it is walkable and has not already been added
                     AddToOpen(mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y - 1))
                 End If
@@ -241,13 +260,13 @@ Public Class Form1
             End If
         End If
 
-        If pntMainPoint.X < 7 Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
+        If pntMainPoint.X < shtMdaTilesAxisSize Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
             If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y).IsInOpenList = False And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y).IsInClosedList = False Then   'Adds the block if it is walkable and has not already been added
                 AddToOpen(mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y))
             End If
         End If
 
-        If pntMainPoint.Y < 7 Then  'Makes sure that it doesn't look for a non-existant block BELLOW it.
+        If pntMainPoint.Y < shtMdaTilesAxisSize Then  'Makes sure that it doesn't look for a non-existant block BELLOW it.
             If mdaTiles(pntMainPoint.X, pntMainPoint.Y + 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X, pntMainPoint.Y + 1).IsInOpenList = False And mdaTiles(pntMainPoint.X, pntMainPoint.Y + 1).IsInClosedList = False Then  'Adds the block if it is walkable and has not already been added
                 AddToOpen(mdaTiles(pntMainPoint.X, pntMainPoint.Y + 1))
             End If
@@ -256,7 +275,7 @@ Public Class Form1
                     AddToOpen(mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y + 1))
                 End If
             End If
-            If pntMainPoint.X < 7 Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
+            If pntMainPoint.X < shtMdaTilesAxisSize Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
                 If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y + 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y + 1).IsInOpenList = False And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y + 1).IsInClosedList = False Then   'Adds the block if it is walkable and has not already been added
                     AddToOpen(mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y + 1))
                 End If
@@ -297,7 +316,7 @@ Public Class Form1
             End If
 
             shtTempF += FindH(pntOpen)
-            Debug.Print(FindH(pntOpen).ToString & " H45")
+            Debug.Print(FindH(pntOpen).ToString & " H46")
             If shtTempF <= shtMainF Then 'If the current open tile's f is the smallest make it the main F
                 shtMainF = shtTempF
                 pntValue = pntOpen
@@ -364,7 +383,7 @@ Public Class Form1
                     lstTempAdjacent.Add(New Point(pntMainPoint.X - 1, pntMainPoint.Y - 1))
                 End If
             End If
-            If pntMainPoint.X < 7 Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
+            If pntMainPoint.X < shtMdaTilesAxisSize Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
                 If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y - 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y - 1).IsInOpenList = True Then   'Adds the block if it is walkable and has not already been added
                     lstTempAdjacent.Add(New Point(pntMainPoint.X + 1, pntMainPoint.Y - 1))
                 End If
@@ -377,13 +396,13 @@ Public Class Form1
             End If
         End If
 
-        If pntMainPoint.X < 7 Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
+        If pntMainPoint.X < shtMdaTilesAxisSize Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
             If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y).IsInOpenList = True Then   'Adds the block if it is walkable and has not already been added
                 lstTempAdjacent.Add(New Point(pntMainPoint.X + 1, pntMainPoint.Y))
             End If
         End If
 
-        If pntMainPoint.Y < 7 Then  'Makes sure that it doesn't look for a non-existant block BELLOW it.
+        If pntMainPoint.Y < shtMdaTilesAxisSize Then  'Makes sure that it doesn't look for a non-existant block BELLOW it.
             If mdaTiles(pntMainPoint.X, pntMainPoint.Y + 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X, pntMainPoint.Y + 1).IsInOpenList = True Then  'Adds the block if it is walkable and has not already been added
                 lstTempAdjacent.Add(New Point(pntMainPoint.X, pntMainPoint.Y + 1))
             End If
@@ -392,7 +411,7 @@ Public Class Form1
                     lstTempAdjacent.Add(New Point(pntMainPoint.X - 1, pntMainPoint.Y + 1))
                 End If
             End If
-            If pntMainPoint.X < 7 Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
+            If pntMainPoint.X < shtMdaTilesAxisSize Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
                 If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y + 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y + 1).IsInOpenList = True Then   'Adds the block if it is walkable and has not already been added
                     lstTempAdjacent.Add(New Point(pntMainPoint.X + 1, pntMainPoint.Y + 1))
                 End If

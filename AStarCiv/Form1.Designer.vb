@@ -29,9 +29,8 @@ Partial Class Form1
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(512, 512)
-        Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle
         Me.Name = "Form1"
-        Me.Text = "A* Civ"
+        Me.Text = "A* Civ (PRESS SPACE)"
         Me.ResumeLayout(False)
 
     End Sub
