@@ -1,9 +1,9 @@
 ﻿'Holds different tile types.
 Public Enum TileType
-    Unwalkable = 0
-    Hindering = 1
-    Normal = 2
-    Dangerous = 3
+    Unwalkable = 0  'Mountains
+    Hindering = 1  'Trees or Hills
+    Normal = 2  'Grassland
+    Dangerous = 3  'Tiles Beside Enemies. (Not yet implemented.)
 End Enum
 
 Public Class Tile
@@ -15,9 +15,9 @@ Public Class Tile
         Me.tileType = tileType
 
         lblID = New Label()
-        lblID.Location = New Point(pntPosition.X, pntPosition.Y + 48) 'set your location
-        lblID.Size = New System.Drawing.Size(32, 16) 'set your size (if required)
-        lblID.Text = "On" 'set the text for your label
+        lblID.Location = New Point(pntPosition.X, pntPosition.Y + 48)
+        lblID.Size = New System.Drawing.Size(32, 16)
+        lblID.Text = "On"
 
         controls.Add(lblID)
 
@@ -28,7 +28,7 @@ Public Class Tile
 
         controls.Add(pbxTile)
     End Sub
-
+    'HERE
     Public Sub Clicked(ByVal sender As Object, ByVal e As MouseEventArgs) Handles pbxTile.MouseDown
         If e.Button = MouseButtons.Left Then
             If tileType = AStarCiv.TileType.Unwalkable Then

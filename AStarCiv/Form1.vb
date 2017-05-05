@@ -1,6 +1,6 @@
 ﻿Imports System.Threading
 
-Public Structure FCostPoint
+Public Structure FCostPoint  'Holds value of F cost and the point it is from.
     Sub New(ByVal shtF As Short, ByVal pnt As Point)
         shtMainF = shtF
         pntValue = pnt
@@ -23,6 +23,7 @@ Public Class Form1
     Const shtMdaTilesAxisSize = 14
 
     Private mdaTiles(15, 15) As Tile  'Holds tile values.
+
     Private lstOpen As New List(Of Point)
     Private lstClosed As New List(Of Point)
     Private pntMain As Point
@@ -46,6 +47,7 @@ Public Class Form1
         imgUnit = Image.FromFile(strCurrentFileDirectory & "UnitTile.png")
         imgEndPoint = Image.FromFile(strCurrentFileDirectory & "EndPointTile.png")
 
+        'instantiates player, endpoint, and textures.
         player = New Player(New Point(0, 0), imgUnit, Controls)
         endPoint = New EndPoint(New Point(7 * 64, 7 * 64), imgEndPoint, Controls)
 
@@ -54,7 +56,6 @@ Public Class Form1
                 mdaTiles(indexX, indexY) = New Tile(TileType.Normal, New Point(indexX * 64, indexY * 64), imgGrassland, Controls)
             Next
         Next
-
     End Sub
 
     Public Sub AddToOpen(ByRef MainTile As Tile)  'Use this to add items to the OpenList (Maybe ByVal)
@@ -67,6 +68,8 @@ Public Class Form1
         MainTile.SetIsInClosedList(True)
         lstOpen.Remove(MainTile.GetPositionInGrid)
         lstClosed.Add(MainTile.GetPositionInGrid)
+
+        'Sets text to the value it is in the closed list.
         MainTile.lblID.Text = lstClosed.Count - 1
         MainTile.lblID.BackColor = Color.Black
         MainTile.lblID.ForeColor = Color.White
@@ -74,99 +77,101 @@ Public Class Form1
 
     Public Sub StartPathFinding(ByVal sender As Object, ByVal e As KeyEventArgs) Handles Me.KeyDown
         If e.KeyCode = Keys.Space Then
-            If blnIsPathFindingDone = False Then  'Finding path
+            If blnIsPathFindingDone = False Then  'Finds the path.
                 'STEP 0
-                pntMain = player.GetPositionInGrid()  'Make middle tile the maintile.
-                AddToOpen(mdaTiles(pntMain.X, pntMain.Y))  'Add current tile to open list
+                pntMain = player.GetPositionInGrid()  'Make middle tile the main tile.
+                AddToOpen(mdaTiles(pntMain.X, pntMain.Y))  'Add current tile to open list.
 
-                While endPoint.GetPositionInGrid <> pntMain  'Stops the loop when the loop hits the endpoint
+                While endPoint.GetPositionInGrid <> pntMain  'Stops the loop when the pathfinding hits the endpoint.
                     'STEP 1
-                    AddToClosedFromOpen(mdaTiles(pntMain.X, pntMain.Y))  'Add middle tile to closed
-                    AddAdjacentTilesToOpen(pntMain)  'Adds 8 tiles around the main tile to the open list
+                    AddToClosedFromOpen(mdaTiles(pntMain.X, pntMain.Y))  'Add main tile to closed.
+                    AddAdjacentTilesToOpen(pntMain)  'Adds the 8 tiles around the main tile to the open list.
 
                     'STEP 2
-                    AutoChangeLastTile(pntMain)
+                    AutoChangeLastTile(pntMain) 'Checks if the main point should paint back to any closed list tiles adjacent to it.
 
                     'STEP 3
-                    Dim pntTemp As Point = FindLowestFCostInSet(lstOpen).pntValue
-                    mdaTiles(pntTemp.X, pntTemp.Y).SetLastTilePoint(pntMain)  'Sets the last tile
-                    pntMain = pntTemp  'Makes the main pnt the lowest Fcost.
-
-                    'Thread.Sleep(5)  'Makes movement slower.
+                    Dim pntLowestFCost As Point = FindLowestFCostInSet(lstOpen).pntValue
+                    mdaTiles(pntLowestFCost.X, pntLowestFCost.Y).SetLastTilePoint(pntMain)  'Sets the last tile, (the tile to point back to.)
+                    pntMain = pntLowestFCost  'Makes the main pnt the lowest Fcost tile.
                 End While
 
-                AddToClosedFromOpen(mdaTiles(pntMain.X, pntMain.Y))
+                AddToClosedFromOpen(mdaTiles(pntMain.X, pntMain.Y)) 'Adds the endpoint to the closed list.
 
                 blnIsPathFindingDone = True
 
-                'Set the path.
-                Dim pntTempPath As Point = lstClosed(lstClosed.Count - 1)
-                While pntTempPath <> player.GetPositionInGrid
-                    player.lstPath.Add(pntTempPath)
-                    pntTempPath = mdaTiles(pntTempPath.X, pntTempPath.Y).GetLastTilePoint
-                End While
+                'Make the path to move on.
+                AddPathToPlayer()
 
-            Else  'Moving each turn
-                While True
-                    'sets movements for the turn
-                    player.shtMovesLeft = player.shtMaxMoves
+            Else  'Moves the path
 
-                    While player.shtMovesLeft > 0
-                        Dim pntTileToMoveTo As Point = player.lstPath(player.lstPath.Count - 1)
+                'sets moves for the turn
+                player.shtMovesLeft = player.shtMaxMoves
 
-                        If player.shtMovesLeft >= 2 Then
-                            If mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Normal Then
-                                player.shtMovesLeft -= 1
+                While player.shtMovesLeft > 0  'Makes the moves for the turn
+                    Dim pntNextMove As Point = player.lstPath(player.lstPath.Count - 1)
 
-                            ElseIf mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Hindering Or
-                                   mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Dangerous Then
-                                player.shtMovesLeft -= 2
+                    If player.shtMovesLeft >= 2 Then
+                        If mdaTiles(pntNextMove.X, pntNextMove.Y).GetTileType = TileType.Normal Then
+                            player.shtMovesLeft -= 1
 
-                            End If
-                        ElseIf player.shtMovesLeft <= 1 Then
-                            If mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Normal Then
-                                player.shtMovesLeft -= 1
+                        ElseIf mdaTiles(pntNextMove.X, pntNextMove.Y).GetTileType = TileType.Hindering Or
+                               mdaTiles(pntNextMove.X, pntNextMove.Y).GetTileType = TileType.Dangerous Then
+                            player.shtMovesLeft -= 2  'Walking on hindering or dangerous tiles slow player movement.
 
-                            ElseIf mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Hindering Or
-                                   mdaTiles(pntTileToMoveTo.X, pntTileToMoveTo.Y).GetTileType = TileType.Dangerous Then
-                                player.shtMovesLeft = 0
-                                Exit While
-                            End If
                         End If
-                        player.SetPositionInGrid(pntTileToMoveTo.X, pntTileToMoveTo.Y)
-                        player.lstPath.RemoveAt(player.lstPath.Count - 1)
+                    ElseIf player.shtMovesLeft <= 1 Then
+                        If mdaTiles(pntNextMove.X, pntNextMove.Y).GetTileType = TileType.Normal Then
+                            player.shtMovesLeft -= 1
 
-                        'Resets the Lists if Finished
-                        If player.lstPath.Count = 0 Then
-                            player.lstPath.Clear()
-
-                            For index As Short = lstClosed.Count - 1 To 0 Step -1
-                                mdaTiles(lstClosed(index).X, lstClosed(index).Y).SetIsInClosedList(False)
-                                mdaTiles(lstClosed(index).X, lstClosed(index).Y).lblID.Text = "On"
-                                mdaTiles(lstClosed(index).X, lstClosed(index).Y).lblID.BackColor = Color.LightGray
-                                mdaTiles(lstClosed(index).X, lstClosed(index).Y).lblID.ForeColor = Color.Black
-                                mdaTiles(lstClosed(index).X, lstClosed(index).Y).SetLastTilePoint(New Point(0, 0))
-                                mdaTiles(lstClosed(index).X, lstClosed(index).Y).pbxTile.Size = New Size(64, 64)
-                                lstClosed.RemoveAt(index)
-                            Next
-
-                            For index As Short = lstOpen.Count - 1 To 0 Step -1
-                                mdaTiles(lstOpen(index).X, lstOpen(index).Y).SetIsInOpenList(False)
-                                mdaTiles(lstOpen(index).X, lstOpen(index).Y).lblID.Text = "On"
-                                mdaTiles(lstOpen(index).X, lstOpen(index).Y).SetLastTilePoint(New Point(0, 0))
-                                mdaTiles(lstOpen(index).X, lstOpen(index).Y).pbxTile.Size = New Size(64, 64)
-                                lstOpen.RemoveAt(index)
-                            Next
-
-                            blnIsPathFindingDone = False
-                            Exit Sub
+                        ElseIf mdaTiles(pntNextMove.X, pntNextMove.Y).GetTileType = TileType.Hindering Or
+                               mdaTiles(pntNextMove.X, pntNextMove.Y).GetTileType = TileType.Dangerous Then
+                            Exit While 'Instantly ends the current turn.
                         End If
+                    End If
 
-                    End While
-                    Thread.Sleep(25)  'Makes movement slower.
+                    'Moves along the path.
+                    player.SetPositionInGrid(pntNextMove.X, pntNextMove.Y)
+                    player.lstPath.RemoveAt(player.lstPath.Count - 1)
+
+                    'Resets the lists if finished.
+                    If player.lstPath.Count = 0 Then
+                        player.lstPath.Clear()
+
+                        'Empties the closed list and resets the values.
+                        For index As Short = lstClosed.Count - 1 To 0 Step -1
+                            mdaTiles(lstClosed(index).X, lstClosed(index).Y).SetIsInClosedList(False)
+                            mdaTiles(lstClosed(index).X, lstClosed(index).Y).lblID.Text = "On"
+                            mdaTiles(lstClosed(index).X, lstClosed(index).Y).lblID.BackColor = Color.GhostWhite
+                            mdaTiles(lstClosed(index).X, lstClosed(index).Y).lblID.ForeColor = Color.Black
+                            mdaTiles(lstClosed(index).X, lstClosed(index).Y).SetLastTilePoint(New Point(0, 0))
+                            mdaTiles(lstClosed(index).X, lstClosed(index).Y).pbxTile.Size = New Size(64, 64)
+                            lstClosed.RemoveAt(index)
+                        Next
+
+                        'Empties the open list and resets the values.
+                        For index As Short = lstOpen.Count - 1 To 0 Step -1
+                            mdaTiles(lstOpen(index).X, lstOpen(index).Y).SetIsInOpenList(False)
+                            mdaTiles(lstOpen(index).X, lstOpen(index).Y).lblID.Text = "On"
+                            mdaTiles(lstOpen(index).X, lstOpen(index).Y).SetLastTilePoint(New Point(0, 0))
+                            mdaTiles(lstOpen(index).X, lstOpen(index).Y).pbxTile.Size = New Size(64, 64)
+                            lstOpen.RemoveAt(index)
+                        Next
+
+                        blnIsPathFindingDone = False
+                        Exit Sub
+                    End If
                 End While
             End If
         End If
+    End Sub
+
+    Private Sub AddPathToPlayer()
+        Dim pntTempPath As Point = lstClosed(lstClosed.Count - 1)
+        While pntTempPath <> player.GetPositionInGrid
+            player.lstPath.Add(pntTempPath)
+            pntTempPath = mdaTiles(pntTempPath.X, pntTempPath.Y).GetLastTilePoint
+        End While
     End Sub
 
     Public Sub AutoChangeLastTile(ByVal pntMainPoint As Point) 'Adds adjacent closed tiles to a temp list and finds the one that is furthest back in the closed list.  Highest G over 2.
@@ -236,7 +241,6 @@ Public Class Form1
         End If
     End Sub
 
-    'Works
     Public Sub AddAdjacentTilesToOpen(ByVal pntMainPoint As Point)  'Adds the 8 blocks adjacent to the main point if they are able to be added.
         If pntMainPoint.Y > 0 Then  'Makes sure that it doesn't look for a non-existant block ABOVE it.
             If mdaTiles(pntMainPoint.X, pntMainPoint.Y - 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X, pntMainPoint.Y - 1).IsInOpenList = False And mdaTiles(pntMainPoint.X, pntMainPoint.Y - 1).IsInClosedList = False Then  'Adds the block if it is walkable and has not already been added
@@ -283,16 +287,15 @@ Public Class Form1
         End If
     End Sub
 
-    'Probably Works
     Public Function FindLowestFCostInSet(ByVal lst As List(Of Point)) As FCostPoint  'also adds f-cost to current tile.
-        Dim shtMainF As Short = 32000
-        Dim pntValue As Point
+        Dim shtMainF As Short = Short.MaxValue
+        Dim pntValue As New Point(0, 0)
 
         For Each pntOpen In lst
             Dim shtTempF As Short = 0
 
             Dim blnCutOffFirstValue As Boolean = False
-            For Each pntClosed In lstClosed  'Calculates the G cost of the tiles before it (In closed list)
+            For Each pntClosed In lstClosed  'Calculates the G cost of the tiles before it.  (In closed list.)
                 If blnCutOffFirstValue = False Then
                     blnCutOffFirstValue = True
                     Continue For
@@ -316,8 +319,7 @@ Public Class Form1
             End If
 
             shtTempF += FindH(pntOpen)
-            Debug.Print(FindH(pntOpen).ToString & " H46")
-            If shtTempF <= shtMainF Then 'If the current open tile's f is the smallest make it the main F
+            If shtTempF <= shtMainF Then 'If the current open tile's F is the smallest make it the main F.
                 shtMainF = shtTempF
                 pntValue = pntOpen
             End If
@@ -325,6 +327,45 @@ Public Class Form1
         Return New FCostPoint(shtMainF, pntValue)  'Outputs the F cost and the block that has it.
     End Function
 
+    Public Function FindH(ByVal pntOpen As Point) As Short  'This is the heuristic algorithim.  This is what can get better.  I'm too lazy to improve it.
+        Dim shtToReturn = 10 * (Math.Abs(pntOpen.X - endPoint.GetPositionInGrid.X) + Math.Abs(pntOpen.Y - endPoint.GetPositionInGrid.Y)) 'TODO: make this better.
+        Return shtToReturn
+    End Function
+
+    Public Function PointsAreAdjacent(ByVal pnt1 As Point, ByVal pnt2 As Point) As Boolean  'Checks if are adjacent
+        If pnt1.X <= pnt2.X + 1 And pnt1.X >= pnt2.X - 1 Then
+            If pnt1.Y <= pnt2.Y + 1 And pnt1.Y >= pnt2.Y - 1 Then
+                Return True  'Are adjacent
+            End If
+        End If
+        Return False  'Are not adjacent
+    End Function
+
+    'Holds Useless Code. (Why no multiline commnet vb.net?  -v-)
+#If False Then
+    'No Use
+    Public Sub LastThing()  'Checks for and deletes the unneeded tiles in the closed list.  'Crops the path.
+        Dim pntTemp As Point
+        Dim shtIndex As Short = 0
+        While pntTemp <> endPoint.GetPositionInGrid() 'Goes throung the entire path.
+            Try
+                pntTemp = lstClosed(shtIndex)
+
+                If PointsAreAdjacent(pntTemp, mdaTiles(pntTemp.X, pntTemp.Y).GetLastTilePoint) Then
+                    shtIndex += 1
+
+                    mdaTiles(lstClosed(shtIndex - 1).X, lstClosed(shtIndex - 1).Y).SetIsInClosedList(False)
+                    mdaTiles(lstClosed(shtIndex - 1).X, lstClosed(shtIndex - 1).Y).pbxTile.Size = New Size(64, 64)
+                    lstClosed.RemoveAt(shtIndex - 1)
+                    mdaTiles(pntTemp.X, pntTemp.Y).SetLastTilePoint(lstClosed(shtIndex - 1))
+                End If
+            Catch ex As Exception
+                Debug.Print("oops")
+                Exit Sub
+            End Try
+        End While
+    End Sub
+    'No Use
     Public Function FindLowestGCostInSetWithoutLastIndex(ByVal lst As List(Of Point)) As FCostPoint  'also adds f-cost to current tile.  Used only for step 2.
         Dim shtMainF As Short = 32000
         Dim pntValue As Point
@@ -365,12 +406,7 @@ Public Class Form1
         Next
         Return New FCostPoint(shtMainF, pntValue)  'Outputs the F cost and the block that has it.
     End Function
-
-    Public Function FindH(ByVal pntOpen As Point) As Short  'This is the heuristic algorithim.  This is what can get better
-        Dim shtToReturn = 10 * (Math.Abs(pntOpen.X - endPoint.GetPositionInGrid.X) + Math.Abs(pntOpen.Y - endPoint.GetPositionInGrid.Y)) 'TODO: make this better.
-        Return shtToReturn
-    End Function
-
+    'No Use
     Public Sub CheckAdjacentTiles(ByVal pntMainPoint As Point)
         Dim lstTempAdjacent As New List(Of Point)
         'Adds tiles to the list
@@ -418,7 +454,7 @@ Public Class Form1
             End If
         End If
 
-        Dim shtLowestInSet As FCostPoint = FindLowestGCostInSetWithoutLastIndex(lstTempAdjacent) 'Finds Lowest G
+        'Dim shtLowestInSet As FCostPoint = FindLowestGCostInSetWithoutLastIndex(lstTempAdjacent) 'Finds Lowest G
 
         'G Cost of lowest 
         'If shtLowestInSet.shtMainF <= pntMain Then
@@ -427,34 +463,5 @@ Public Class Form1
 
     End Sub
 
-    'Public Sub LastThing()  'Checks for and deletes the unneeded tiles in the closed list.  'Crops the path.
-    'Dim pntTemp As Point
-    'Dim shtIndex As Short = 0
-    '   While pntTemp <> endPoint.GetPositionInGrid() 'Goes throung the entire path.
-    '      Try
-    '         pntTemp = lstClosed(shtIndex)
-    '
-    '           If PointsAreAdjacent(pntTemp, mdaTiles(pntTemp.X, pntTemp.Y).GetLastTilePoint) Then
-    '              shtIndex += 1
-    '
-    '             mdaTiles(lstClosed(shtIndex - 1).X, lstClosed(shtIndex - 1).Y).SetIsInClosedList(False)
-    '            mdaTiles(lstClosed(shtIndex - 1).X, lstClosed(shtIndex - 1).Y).pbxTile.Size = New Size(64, 64)
-    '           lstClosed.RemoveAt(shtIndex - 1)
-    '          mdaTiles(pntTemp.X, pntTemp.Y).SetLastTilePoint(lstClosed(shtIndex - 1))
-    '     End If
-    '     Catch ex As Exception
-    '        Debug.Print("oops")
-    '       Exit Sub
-    '  End Try
-    'End While
-    'End Sub
-
-    Public Function PointsAreAdjacent(ByVal pnt1 As Point, ByVal pnt2 As Point) As Boolean  'Checks if are adjacent
-        If pnt1.X <= pnt2.X + 1 And pnt1.X >= pnt2.X - 1 Then
-            If pnt1.Y <= pnt2.Y + 1 And pnt1.Y >= pnt2.Y - 1 Then
-                Return True  'Are adjacent
-            End If
-        End If
-        Return False  'Are not adjacent
-    End Function
+#End If
 End Class

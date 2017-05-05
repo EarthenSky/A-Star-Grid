@@ -1,11 +1,10 @@
 ﻿Public Class Player
-    Private WithEvents pbxPlayer As PictureBox  'Holds position and stuff.
-
-    Public lstPath As New List(Of Point)
-
-    Public Const shtMaxMoves As Short = 2
+    Public Const shtMaxMoves As Short = 2  'Moves per turn
     Public shtMovesLeft As Short = 0
 
+    Public lstPath As New List(Of Point) 'Holds the path to move in.
+
+    Private WithEvents pbxPlayer As PictureBox  'Holds position and stuff.
 
     Sub New(ByVal pntPosition As Point, ByVal imgTexture As Image, ByRef controls As Control.ControlCollection)
         pbxPlayer = New PictureBox()
