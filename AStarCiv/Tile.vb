@@ -11,7 +11,7 @@ Public Class Tile
     Public WithEvents pbxTile As PictureBox  'Holds position and stuff.
     Public lblID As Label  'Holds label stuff for debug
 
-    Sub New(ByVal tileType As TileType, ByVal pntPosition As Point, ByVal imgTexture As Image, ByRef controls As Control.ControlCollection)
+    Sub New(ByVal tileType As TileType, ByVal pntPosition As Point, ByVal clrColour As Color, ByRef controls As Control.ControlCollection)
         Me.tileType = tileType
 
         lblID = New Label()
@@ -22,7 +22,7 @@ Public Class Tile
         controls.Add(lblID)
 
         pbxTile = New PictureBox()
-        pbxTile.Image = imgTexture
+        pbxTile.BackColor = clrColour
         pbxTile.Location = pntPosition
         pbxTile.Size = New Size(64, 64)
 
@@ -50,11 +50,11 @@ Public Class Tile
     Public Sub ChangeTexture(ByVal tileType As TileType)
         Select Case (tileType)
             Case AStarCiv.TileType.Unwalkable
-                pbxTile.Image = Form1.imgMountains
+                pbxTile.BackColor = Color.DarkGray
             Case AStarCiv.TileType.Hindering
-                pbxTile.Image = Form1.imgHills
+                pbxTile.BackColor = Color.Green
             Case AStarCiv.TileType.Normal
-                pbxTile.Image = Form1.imgGrassland
+                pbxTile.BackColor = Color.LimeGreen
         End Select
     End Sub
 
@@ -78,7 +78,11 @@ Public Class Tile
     Private isInOpen As Boolean  'Holds if it is part of the open list
     Public Sub SetIsInOpenList(ByVal blnValue As Boolean)
         isInOpen = blnValue
-        pbxTile.Size = New Size(32, 32)
+        If GetTileType() = tileType.Hindering Then
+            pbxTile.BackColor = Color.IndianRed
+        ElseIf GetTileType() = tileType.Normal Then
+            pbxTile.BackColor = Color.Coral
+        End If
     End Sub
 
     Public Function IsInOpenList() As Boolean
@@ -88,7 +92,11 @@ Public Class Tile
     Private isInClosed As Boolean  'Holds if it is part of the open list
     Public Sub SetIsInClosedList(ByVal blnValue As Boolean)
         isInClosed = blnValue
-        pbxTile.Size = New Size(16, 16)
+        If GetTileType() = tileType.Hindering Then
+            pbxTile.BackColor = Color.Purple
+        ElseIf GetTileType() = tileType.Normal Then
+            pbxTile.BackColor = Color.MediumPurple
+        End If
     End Sub
 
     Public Function IsInClosedList() As Boolean

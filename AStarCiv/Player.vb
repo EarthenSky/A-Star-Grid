@@ -6,9 +6,9 @@
 
     Private WithEvents pbxPlayer As PictureBox  'Holds position and stuff.
 
-    Sub New(ByVal pntPosition As Point, ByVal imgTexture As Image, ByRef controls As Control.ControlCollection)
+    Sub New(ByVal pntPosition As Point, ByRef controls As Control.ControlCollection)
         pbxPlayer = New PictureBox()
-        pbxPlayer.Image = imgTexture
+        pbxPlayer.BackColor = Color.Red
         pbxPlayer.Location = pntPosition
         pbxPlayer.Size = New Size(64, 64)
 

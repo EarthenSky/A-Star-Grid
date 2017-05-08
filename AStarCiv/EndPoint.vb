@@ -2,9 +2,9 @@
 
     Private WithEvents pbxEndPoint As PictureBox  'Holds position and stuff.
 
-    Sub New(ByVal pntPosition As Point, ByVal imgTexture As Image, ByRef controls As Control.ControlCollection)
+    Sub New(ByVal pntPosition As Point, ByRef controls As Control.ControlCollection)
         pbxEndPoint = New PictureBox()
-        pbxEndPoint.Image = imgTexture
+        pbxEndPoint.BackColor = Color.CornflowerBlue
         pbxEndPoint.Location = pntPosition
         pbxEndPoint.Size = New Size(64, 64)
 

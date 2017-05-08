@@ -31,29 +31,25 @@ Public Class Form1
     Private strCurrentFileDirectory As String = IO.Directory.GetCurrentDirectory.Remove(IO.Directory.GetCurrentDirectory.IndexOf("\bin\Debug"), 10) + "\"
 
     'Image vars.
-    Public imgGrassland As Image
+    'Public imgGrassland As Image
     Public imgMountains As Image
     Public imgHills As Image
-    Public imgUnit As Image
-    Public imgEndPoint As Image
 
     Private blnIsPathFindingDone = False
 
     Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
         'Assigns textures to all of the image variables.
-        imgGrassland = Image.FromFile(strCurrentFileDirectory & "GrassLandTile.png")
-        imgMountains = Image.FromFile(strCurrentFileDirectory & "MountainTile.png")
-        imgHills = Image.FromFile(strCurrentFileDirectory & "HillsTile.png")
-        imgUnit = Image.FromFile(strCurrentFileDirectory & "UnitTile.png")
-        imgEndPoint = Image.FromFile(strCurrentFileDirectory & "EndPointTile.png")
+        'imgGrassland = Image.FromFile(strCurrentFileDirectory & "GrassLandTile.png")
+        'imgMountains = Image.FromFile(strCurrentFileDirectory & "MountainTile.png")
+        'imgHills = Image.FromFile(strCurrentFileDirectory & "HillsTile.png")
 
         'instantiates player, endpoint, and textures.
-        player = New Player(New Point(0, 0), imgUnit, Controls)
-        endPoint = New EndPoint(New Point(7 * 64, 7 * 64), imgEndPoint, Controls)
+        player = New Player(New Point(0, 0), Controls)
+        endPoint = New EndPoint(New Point(7 * 64, 7 * 64), Controls)
 
         For indexX As Short = 0 To shtMdaTilesAxisSize
             For indexY As Short = 0 To shtMdaTilesAxisSize
-                mdaTiles(indexX, indexY) = New Tile(TileType.Normal, New Point(indexX * 64, indexY * 64), imgGrassland, Controls)
+                mdaTiles(indexX, indexY) = New Tile(TileType.Normal, New Point(indexX * 64, indexY * 64), Color.LimeGreen, Controls)
             Next
         Next
     End Sub
@@ -145,7 +141,11 @@ Public Class Form1
                             mdaTiles(lstClosed(index).X, lstClosed(index).Y).lblID.BackColor = Color.GhostWhite
                             mdaTiles(lstClosed(index).X, lstClosed(index).Y).lblID.ForeColor = Color.Black
                             mdaTiles(lstClosed(index).X, lstClosed(index).Y).SetLastTilePoint(New Point(0, 0))
-                            mdaTiles(lstClosed(index).X, lstClosed(index).Y).pbxTile.Size = New Size(64, 64)
+                            If mdaTiles(lstClosed(index).X, lstClosed(index).Y).GetTileType = TileType.Hindering Then
+                                mdaTiles(lstClosed(index).X, lstClosed(index).Y).pbxTile.BackColor = Color.Green
+                            Else
+                                mdaTiles(lstClosed(index).X, lstClosed(index).Y).pbxTile.BackColor = Color.LimeGreen
+                            End If
                             lstClosed.RemoveAt(index)
                         Next
 
@@ -154,7 +154,12 @@ Public Class Form1
                             mdaTiles(lstOpen(index).X, lstOpen(index).Y).SetIsInOpenList(False)
                             mdaTiles(lstOpen(index).X, lstOpen(index).Y).lblID.Text = "On"
                             mdaTiles(lstOpen(index).X, lstOpen(index).Y).SetLastTilePoint(New Point(0, 0))
-                            mdaTiles(lstOpen(index).X, lstOpen(index).Y).pbxTile.Size = New Size(64, 64)
+                            If mdaTiles(lstOpen(index).X, lstOpen(index).Y).GetTileType = TileType.Hindering Then
+                                mdaTiles(lstOpen(index).X, lstOpen(index).Y).pbxTile.BackColor = Color.Green
+                            Else
+                                mdaTiles(lstOpen(index).X, lstOpen(index).Y).pbxTile.BackColor = Color.LimeGreen
+                            End If
+
                             lstOpen.RemoveAt(index)
                         Next
 
