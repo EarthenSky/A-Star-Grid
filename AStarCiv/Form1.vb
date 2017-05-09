@@ -20,9 +20,9 @@ Public Class Form1
 
     Private endPoint As EndPoint
 
-    Const shtMdaTilesAxisSize = 14
+    Const shtMdaTilesAxisSize = 31
 
-    Private mdaTiles(15, 15) As Tile  'Holds tile values.
+    Private mdaTiles(32, 32) As Tile  'Holds tile values.
 
     Private lstOpen As New List(Of Point)
     Private lstClosed As New List(Of Point)
@@ -30,18 +30,9 @@ Public Class Form1
 
     Private strCurrentFileDirectory As String = IO.Directory.GetCurrentDirectory.Remove(IO.Directory.GetCurrentDirectory.IndexOf("\bin\Debug"), 10) + "\"
 
-    'Image vars.
-    'Public imgGrassland As Image
-    Public imgMountains As Image
-    Public imgHills As Image
-
     Private blnIsPathFindingDone = False
 
     Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
-        'Assigns textures to all of the image variables.
-        'imgGrassland = Image.FromFile(strCurrentFileDirectory & "GrassLandTile.png")
-        'imgMountains = Image.FromFile(strCurrentFileDirectory & "MountainTile.png")
-        'imgHills = Image.FromFile(strCurrentFileDirectory & "HillsTile.png")
 
         'instantiates player, endpoint, and textures.
         player = New Player(New Point(0, 0), Controls)
@@ -87,7 +78,8 @@ Public Class Form1
                     AutoChangeLastTile(pntMain) 'Checks if the main point should paint back to any closed list tiles adjacent to it.
 
                     'STEP 3
-                    Dim pntLowestFCost As Point = FindLowestFCostInSet(lstOpen).pntValue
+                    Dim pntLowestFCost As Point = FindLowestFCostInSet(EightAdjacentTiles(pntMain)).pntValue  'Only uses 8 adjacent
+                    'Dim pntLowestFCost As Point = FindLowestFCostInSet(lstOpen).pntValue
                     mdaTiles(pntLowestFCost.X, pntLowestFCost.Y).SetLastTilePoint(pntMain)  'Sets the last tile, (the tile to point back to.)
                     pntMain = pntLowestFCost  'Makes the main pnt the lowest Fcost tile.
                 End While
@@ -245,6 +237,57 @@ Public Class Form1
             mdaTiles(pntMainPoint.X, pntMainPoint.Y).SetLastTilePoint(pntOutputPoint)
         End If
     End Sub
+
+    Public Function EightAdjacentTiles(ByVal pntMainPoint As Point) As List(Of Point) 'Adds adjacent closed tiles to a temp list and finds the one that is furthest back in the closed list.  Highest G over 2.
+        'Makes a list of open objects adjacent to main point.
+        Dim lstOpenTemp As New List(Of Point)
+
+        If pntMainPoint.Y > 0 Then  'Makes sure that it doesn't look for a non-existant block ABOVE it.
+            If mdaTiles(pntMainPoint.X, pntMainPoint.Y - 1).IsInOpenList = True Then  'Adds the block if it is not Walkable
+                lstOpenTemp.Add(New Point(pntMainPoint.X, pntMainPoint.Y - 1))
+            End If
+            If pntMainPoint.X > 0 Then  'Makes sure that it doesn't look for a non-existant block to the LEFT of it.
+                If mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y - 1).IsInOpenList = True Then   'Adds the block if it is not Walkable
+                    lstOpenTemp.Add(New Point(pntMainPoint.X - 1, pntMainPoint.Y - 1))
+                End If
+            End If
+            If pntMainPoint.X < shtMdaTilesAxisSize Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
+                If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y - 1).IsInOpenList = True Then   'Adds the block if it is not Walkable
+                    lstOpenTemp.Add(New Point(pntMainPoint.X + 1, pntMainPoint.Y - 1))
+                End If
+            End If
+        End If
+
+        If pntMainPoint.X > 0 Then  'Makes sure that it doesn't look for a non-existant block to the LEFT of it.
+            If mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y).IsInOpenList = True Then   'Adds the block if it is not Walkable
+                lstOpenTemp.Add(New Point(pntMainPoint.X - 1, pntMainPoint.Y))
+            End If
+        End If
+
+        If pntMainPoint.X < shtMdaTilesAxisSize Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
+            If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y).IsInOpenList = True Then   'Adds the block if it is not Walkable
+                lstOpenTemp.Add(New Point(pntMainPoint.X + 1, pntMainPoint.Y))
+            End If
+        End If
+
+        If pntMainPoint.Y < shtMdaTilesAxisSize Then  'Makes sure that it doesn't look for a non-existant block BELLOW it.
+            If mdaTiles(pntMainPoint.X, pntMainPoint.Y + 1).IsInOpenList = True Then  'Adds the block if it is not Walkable
+                lstOpenTemp.Add(New Point(pntMainPoint.X, pntMainPoint.Y + 1))
+            End If
+            If pntMainPoint.X > 0 Then  'Makes sure that it doesn't look for a non-existant block to the LEFT of it.
+                If mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y + 1).IsInOpenList = True Then   'Adds the block if it is not Walkable
+                    lstOpenTemp.Add(New Point(pntMainPoint.X - 1, pntMainPoint.Y + 1))
+                End If
+            End If
+            If pntMainPoint.X < shtMdaTilesAxisSize Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
+                If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y + 1).IsInOpenList = True Then   'Adds the block if it is not Walkable
+                    lstOpenTemp.Add(New Point(pntMainPoint.X + 1, pntMainPoint.Y + 1))
+                End If
+            End If
+        End If
+
+        Return lstOpenTemp
+    End Function
 
     Public Sub AddAdjacentTilesToOpen(ByVal pntMainPoint As Point)  'Adds the 8 blocks adjacent to the main point if they are able to be added.
         If pntMainPoint.Y > 0 Then  'Makes sure that it doesn't look for a non-existant block ABOVE it.
@@ -467,6 +510,5 @@ Public Class Form1
         'End If
 
     End Sub
-
 #End If
 End Class
