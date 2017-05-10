@@ -20,9 +20,9 @@ Public Class Form1
 
     Private endPoint As EndPoint
 
-    Const shtMdaTilesAxisSize = 31
+    Const shtMdaTilesAxisSize = 11
 
-    Private mdaTiles(32, 32) As Tile  'Holds tile values.
+    Private mdaTiles(12, 12) As Tile  'Holds tile values.
 
     Private lstOpen As New List(Of Point)
     Private lstClosed As New List(Of Point)
@@ -121,6 +121,8 @@ Public Class Form1
                     'Moves along the path.
                     player.SetPositionInGrid(pntNextMove.X, pntNextMove.Y)
                     player.lstPath.RemoveAt(player.lstPath.Count - 1)
+
+                    Thread.Sleep(250)
 
                     'Resets the lists if finished.
                     If player.lstPath.Count = 0 Then
@@ -389,126 +391,4 @@ Public Class Form1
         Return False  'Are not adjacent
     End Function
 
-    'Holds Useless Code. (Why no multiline commnet vb.net?  -v-)
-#If False Then
-    'No Use
-    Public Sub LastThing()  'Checks for and deletes the unneeded tiles in the closed list.  'Crops the path.
-        Dim pntTemp As Point
-        Dim shtIndex As Short = 0
-        While pntTemp <> endPoint.GetPositionInGrid() 'Goes throung the entire path.
-            Try
-                pntTemp = lstClosed(shtIndex)
-
-                If PointsAreAdjacent(pntTemp, mdaTiles(pntTemp.X, pntTemp.Y).GetLastTilePoint) Then
-                    shtIndex += 1
-
-                    mdaTiles(lstClosed(shtIndex - 1).X, lstClosed(shtIndex - 1).Y).SetIsInClosedList(False)
-                    mdaTiles(lstClosed(shtIndex - 1).X, lstClosed(shtIndex - 1).Y).pbxTile.Size = New Size(64, 64)
-                    lstClosed.RemoveAt(shtIndex - 1)
-                    mdaTiles(pntTemp.X, pntTemp.Y).SetLastTilePoint(lstClosed(shtIndex - 1))
-                End If
-            Catch ex As Exception
-                Debug.Print("oops")
-                Exit Sub
-            End Try
-        End While
-    End Sub
-    'No Use
-    Public Function FindLowestGCostInSetWithoutLastIndex(ByVal lst As List(Of Point)) As FCostPoint  'also adds f-cost to current tile.  Used only for step 2.
-        Dim shtMainF As Short = 32000
-        Dim pntValue As Point
-        Dim lstClosedTemp As List(Of Point) = lstClosed
-        lstClosedTemp.RemoveAt(lstClosedTemp.Count - 1) 'Removes last tile
-
-        For Each pntOpen In lst
-            Dim shtTempF As Short = 0
-
-            Dim blnCutOffFirstValue As Boolean = False
-            For Each pntClosed In lstClosedTemp  'Calculates the G cost of the tiles before it (In closed list)
-                If blnCutOffFirstValue = False Then
-                    blnCutOffFirstValue = True
-                    Continue For
-                End If
-                If mdaTiles(pntClosed.X, pntClosed.Y).GetTileType = TileType.Normal Then
-                    shtTempF += 10
-                ElseIf mdaTiles(pntClosed.X, pntClosed.Y).GetTileType = TileType.Hindering Then
-                    shtTempF += 20
-                ElseIf mdaTiles(pntClosed.X, pntClosed.Y).GetTileType = TileType.Dangerous Then
-                    shtTempF += 40
-                End If
-            Next
-
-            'Calculates the G cost of the current open tile.
-            If mdaTiles(pntOpen.X, pntOpen.Y).GetTileType = TileType.Normal Then
-                shtTempF += 10
-            ElseIf mdaTiles(pntOpen.X, pntOpen.Y).GetTileType = TileType.Hindering Then
-                shtTempF += 20
-            ElseIf mdaTiles(pntOpen.X, pntOpen.Y).GetTileType = TileType.Dangerous Then
-                shtTempF += 40
-            End If
-
-            If shtTempF <= shtMainF Then 'If the current open tile's f is the smallest make it the main F
-                shtMainF = shtTempF
-                pntValue = pntOpen
-            End If
-        Next
-        Return New FCostPoint(shtMainF, pntValue)  'Outputs the F cost and the block that has it.
-    End Function
-    'No Use
-    Public Sub CheckAdjacentTiles(ByVal pntMainPoint As Point)
-        Dim lstTempAdjacent As New List(Of Point)
-        'Adds tiles to the list
-        If pntMainPoint.Y > 0 Then  'Makes sure that it doesn't look for a non-existant block ABOVE it.
-            If mdaTiles(pntMainPoint.X, pntMainPoint.Y - 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X, pntMainPoint.Y - 1).IsInOpenList = True Then  'Adds the block if it is walkable and has not already been added
-                lstTempAdjacent.Add(New Point(pntMainPoint.X, pntMainPoint.Y - 1))
-            End If
-            If pntMainPoint.X > 0 Then  'Makes sure that it doesn't look for a non-existant block to the LEFT of it.
-                If mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y - 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y - 1).IsInOpenList = True Then   'Adds the block if it is walkable and has not already been added
-                    lstTempAdjacent.Add(New Point(pntMainPoint.X - 1, pntMainPoint.Y - 1))
-                End If
-            End If
-            If pntMainPoint.X < shtMdaTilesAxisSize Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
-                If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y - 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y - 1).IsInOpenList = True Then   'Adds the block if it is walkable and has not already been added
-                    lstTempAdjacent.Add(New Point(pntMainPoint.X + 1, pntMainPoint.Y - 1))
-                End If
-            End If
-        End If
-
-        If pntMainPoint.X > 0 Then  'Makes sure that it doesn't look for a non-existant block to the LEFT of it.
-            If mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y).IsInOpenList = True Then   'Adds the block if it is walkable and has not already been added
-                lstTempAdjacent.Add(New Point(pntMainPoint.X - 1, pntMainPoint.Y))
-            End If
-        End If
-
-        If pntMainPoint.X < shtMdaTilesAxisSize Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
-            If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y).IsInOpenList = True Then   'Adds the block if it is walkable and has not already been added
-                lstTempAdjacent.Add(New Point(pntMainPoint.X + 1, pntMainPoint.Y))
-            End If
-        End If
-
-        If pntMainPoint.Y < shtMdaTilesAxisSize Then  'Makes sure that it doesn't look for a non-existant block BELLOW it.
-            If mdaTiles(pntMainPoint.X, pntMainPoint.Y + 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X, pntMainPoint.Y + 1).IsInOpenList = True Then  'Adds the block if it is walkable and has not already been added
-                lstTempAdjacent.Add(New Point(pntMainPoint.X, pntMainPoint.Y + 1))
-            End If
-            If pntMainPoint.X > 0 Then  'Makes sure that it doesn't look for a non-existant block to the LEFT of it.
-                If mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y + 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X - 1, pntMainPoint.Y + 1).IsInOpenList = True Then   'Adds the block if it is walkable and has not already been added
-                    lstTempAdjacent.Add(New Point(pntMainPoint.X - 1, pntMainPoint.Y + 1))
-                End If
-            End If
-            If pntMainPoint.X < shtMdaTilesAxisSize Then  'Makes sure that it doesn't look for a non-existant block to the RIGHT of it.
-                If mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y + 1).GetTileType <> TileType.Unwalkable And mdaTiles(pntMainPoint.X + 1, pntMainPoint.Y + 1).IsInOpenList = True Then   'Adds the block if it is walkable and has not already been added
-                    lstTempAdjacent.Add(New Point(pntMainPoint.X + 1, pntMainPoint.Y + 1))
-                End If
-            End If
-        End If
-
-        'Dim shtLowestInSet As FCostPoint = FindLowestGCostInSetWithoutLastIndex(lstTempAdjacent) 'Finds Lowest G
-
-        'G Cost of lowest 
-        'If shtLowestInSet.shtMainF <= pntMain Then
-        '    'TODO: THIS
-        'End If
-
-    End Sub
-#End If
 End Class
